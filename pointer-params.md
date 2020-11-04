@@ -1,4 +1,4 @@
-# Pointer Type May Not Be Ideal for Parameters
+# Pointers Might Not Be Ideal for Parameters
 
 Author(s): [Changkun Ou](https://changkun.de)
 
@@ -209,9 +209,9 @@ The dumped assumbly code is as follows:
 
 The `addv` implementation uses values from the previous stack frame and
 writes the result directly to the return; whereas `addp` needs MOVQ that
-copies the parameter to different registers (e.g., copy pointers to AX and CX,),
-then write back when returning. Therefore, another unexpected cost in
-`addp` is caused by the indirect addressing mode for accessing the memory unit.
+copies the parameter to different registers (e.g., copy pointers to AX and CX),
+then write back when returning. Therefore, with inline disabled, the reason that `addv` 
+is slower than `addp` is caused by different memory access pattern.
 
 ## Further Reading Suggestions
 
