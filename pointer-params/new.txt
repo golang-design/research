@@ -1,0 +1,29 @@
+goos: linux
+goarch: amd64
+pkg: pparam
+cpu: Intel(R) Core(TM) i9-9900K CPU @ 3.60GHz
+BenchmarkVec
+BenchmarkVec/addv
+BenchmarkVec/addv-16         	1000000000	         0.248 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addv-16         	1000000000	         0.246 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addv-16         	1000000000	         0.245 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addv-16         	1000000000	         0.247 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addv-16         	1000000000	         0.245 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addv-16         	1000000000	         0.251 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addv-16         	1000000000	         0.244 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addv-16         	1000000000	         0.248 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addv-16         	1000000000	         0.245 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addv-16         	1000000000	         0.247 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addp
+BenchmarkVec/addp-16         	542272434	         2.20 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addp-16         	539037184	         2.20 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addp-16         	540776833	         2.20 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addp-16         	544748211	         2.20 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addp-16         	541640467	         2.20 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addp-16         	542534834	         2.20 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addp-16         	545261732	         2.20 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addp-16         	541708059	         2.21 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addp-16         	540058902	         2.20 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addp-16         	544637650	         2.22 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	pparam	16.939s

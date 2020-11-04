@@ -1,0 +1,29 @@
+goos: linux
+goarch: amd64
+pkg: pparam
+cpu: Intel(R) Core(TM) i9-9900K CPU @ 3.60GHz
+BenchmarkVec
+BenchmarkVec/addv
+BenchmarkVec/addv-16         	244740026	         4.94 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addv-16         	238191192	         5.00 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addv-16         	239102894	         4.91 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addv-16         	242241174	         5.05 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addv-16         	239599408	         4.97 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addv-16         	242398069	         4.97 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addv-16         	245713750	         5.01 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addv-16         	239087434	         4.97 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addv-16         	241478091	         4.97 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addv-16         	245315800	         4.99 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addp
+BenchmarkVec/addp-16         	359001780	         3.35 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addp-16         	356653314	         3.35 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addp-16         	355649169	         3.38 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addp-16         	356476636	         3.34 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addp-16         	356531529	         3.36 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addp-16         	350654100	         3.34 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addp-16         	358256036	         3.35 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addp-16         	357659518	         3.36 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addp-16         	359835247	         3.34 ns/op	       0 B/op	       0 allocs/op
+BenchmarkVec/addp-16         	358859107	         3.35 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	pparam	32.443s
