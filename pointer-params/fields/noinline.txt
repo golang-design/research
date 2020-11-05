@@ -1,0 +1,226 @@
+goos: linux
+goarch: amd64
+pkg: pparam/fields
+BenchmarkVec
+BenchmarkVec/addv-s0
+BenchmarkVec/addv-s0-16         	329394637	         3.64 ns/op
+BenchmarkVec/addv-s0-16         	329835904	         3.63 ns/op
+BenchmarkVec/addv-s0-16         	327917035	         3.63 ns/op
+BenchmarkVec/addv-s0-16         	328729119	         3.64 ns/op
+BenchmarkVec/addv-s0-16         	329505537	         3.65 ns/op
+BenchmarkVec/addv-s0-16         	329852334	         3.66 ns/op
+BenchmarkVec/addv-s0-16         	329510830	         3.63 ns/op
+BenchmarkVec/addv-s0-16         	330179582	         3.63 ns/op
+BenchmarkVec/addv-s0-16         	329561041	         3.65 ns/op
+BenchmarkVec/addv-s0-16         	327242888	         3.64 ns/op
+BenchmarkVec/addp-s0
+BenchmarkVec/addp-s0-16         	535681923	         2.23 ns/op
+BenchmarkVec/addp-s0-16         	533405949	         2.22 ns/op
+BenchmarkVec/addp-s0-16         	531874282	         2.24 ns/op
+BenchmarkVec/addp-s0-16         	539777142	         2.23 ns/op
+BenchmarkVec/addp-s0-16         	538100180	         2.24 ns/op
+BenchmarkVec/addp-s0-16         	532584294	         2.23 ns/op
+BenchmarkVec/addp-s0-16         	531993277	         2.26 ns/op
+BenchmarkVec/addp-s0-16         	535417578	         2.25 ns/op
+BenchmarkVec/addp-s0-16         	536964084	         2.22 ns/op
+BenchmarkVec/addp-s0-16         	531735216	         2.22 ns/op
+BenchmarkVec/addv-s1
+BenchmarkVec/addv-s1-16         	314566422	         3.82 ns/op
+BenchmarkVec/addv-s1-16         	313312890	         3.82 ns/op
+BenchmarkVec/addv-s1-16         	311632996	         3.81 ns/op
+BenchmarkVec/addv-s1-16         	314545568	         3.83 ns/op
+BenchmarkVec/addv-s1-16         	312354152	         3.82 ns/op
+BenchmarkVec/addv-s1-16         	314837868	         3.81 ns/op
+BenchmarkVec/addv-s1-16         	313786642	         3.81 ns/op
+BenchmarkVec/addv-s1-16         	313402039	         3.82 ns/op
+BenchmarkVec/addv-s1-16         	313227186	         3.82 ns/op
+BenchmarkVec/addv-s1-16         	313479097	         3.82 ns/op
+BenchmarkVec/addp-s1
+BenchmarkVec/addp-s1-16         	461345793	         2.60 ns/op
+BenchmarkVec/addp-s1-16         	461785838	         2.62 ns/op
+BenchmarkVec/addp-s1-16         	459256282	         2.61 ns/op
+BenchmarkVec/addp-s1-16         	459784808	         2.60 ns/op
+BenchmarkVec/addp-s1-16         	455917843	         2.61 ns/op
+BenchmarkVec/addp-s1-16         	459727772	         2.60 ns/op
+BenchmarkVec/addp-s1-16         	455649055	         2.60 ns/op
+BenchmarkVec/addp-s1-16         	460400042	         2.61 ns/op
+BenchmarkVec/addp-s1-16         	459531624	         2.60 ns/op
+BenchmarkVec/addp-s1-16         	461764338	         2.61 ns/op
+BenchmarkVec/addv-s2
+BenchmarkVec/addv-s2-16         	279558537	         4.29 ns/op
+BenchmarkVec/addv-s2-16         	271718586	         4.28 ns/op
+BenchmarkVec/addv-s2-16         	280219876	         4.28 ns/op
+BenchmarkVec/addv-s2-16         	279165777	         4.28 ns/op
+BenchmarkVec/addv-s2-16         	279987200	         4.29 ns/op
+BenchmarkVec/addv-s2-16         	279887095	         4.29 ns/op
+BenchmarkVec/addv-s2-16         	279465348	         4.29 ns/op
+BenchmarkVec/addv-s2-16         	279532735	         4.26 ns/op
+BenchmarkVec/addv-s2-16         	278756006	         4.29 ns/op
+BenchmarkVec/addv-s2-16         	280501804	         4.28 ns/op
+BenchmarkVec/addp-s2
+BenchmarkVec/addp-s2-16         	398300016	         2.95 ns/op
+BenchmarkVec/addp-s2-16         	405825933	         2.94 ns/op
+BenchmarkVec/addp-s2-16         	405598174	         2.94 ns/op
+BenchmarkVec/addp-s2-16         	405298662	         2.97 ns/op
+BenchmarkVec/addp-s2-16         	404821497	         2.94 ns/op
+BenchmarkVec/addp-s2-16         	406030790	         2.96 ns/op
+BenchmarkVec/addp-s2-16         	405752565	         2.95 ns/op
+BenchmarkVec/addp-s2-16         	407402588	         2.95 ns/op
+BenchmarkVec/addp-s2-16         	405716150	         2.99 ns/op
+BenchmarkVec/addp-s2-16         	403796772	         2.94 ns/op
+BenchmarkVec/addv-s3
+BenchmarkVec/addv-s3-16         	240910869	         5.05 ns/op
+BenchmarkVec/addv-s3-16         	240055387	         5.02 ns/op
+BenchmarkVec/addv-s3-16         	240276380	         4.99 ns/op
+BenchmarkVec/addv-s3-16         	240990964	         4.99 ns/op
+BenchmarkVec/addv-s3-16         	239026558	         5.00 ns/op
+BenchmarkVec/addv-s3-16         	240293707	         5.00 ns/op
+BenchmarkVec/addv-s3-16         	239894463	         5.02 ns/op
+BenchmarkVec/addv-s3-16         	239601175	         4.97 ns/op
+BenchmarkVec/addv-s3-16         	240583945	         5.02 ns/op
+BenchmarkVec/addv-s3-16         	240676532	         4.99 ns/op
+BenchmarkVec/addp-s3
+BenchmarkVec/addp-s3-16         	351424561	         3.34 ns/op
+BenchmarkVec/addp-s3-16         	351622267	         3.37 ns/op
+BenchmarkVec/addp-s3-16         	352707408	         3.34 ns/op
+BenchmarkVec/addp-s3-16         	353534013	         3.34 ns/op
+BenchmarkVec/addp-s3-16         	359045946	         3.33 ns/op
+BenchmarkVec/addp-s3-16         	357719116	         3.35 ns/op
+BenchmarkVec/addp-s3-16         	359036304	         3.34 ns/op
+BenchmarkVec/addp-s3-16         	360092972	         3.34 ns/op
+BenchmarkVec/addp-s3-16         	357313723	         3.35 ns/op
+BenchmarkVec/addp-s3-16         	359214470	         3.35 ns/op
+BenchmarkVec/addv-s4
+BenchmarkVec/addv-s4-16         	100000000	        10.5 ns/op
+BenchmarkVec/addv-s4-16         	100000000	        10.5 ns/op
+BenchmarkVec/addv-s4-16         	100000000	        10.5 ns/op
+BenchmarkVec/addv-s4-16         	100000000	        10.5 ns/op
+BenchmarkVec/addv-s4-16         	100000000	        10.5 ns/op
+BenchmarkVec/addv-s4-16         	100000000	        10.5 ns/op
+BenchmarkVec/addv-s4-16         	100000000	        10.5 ns/op
+BenchmarkVec/addv-s4-16         	100000000	        10.5 ns/op
+BenchmarkVec/addv-s4-16         	100000000	        10.5 ns/op
+BenchmarkVec/addv-s4-16         	100000000	        10.5 ns/op
+BenchmarkVec/addp-s4
+BenchmarkVec/addp-s4-16         	316410380	         3.78 ns/op
+BenchmarkVec/addp-s4-16         	314632107	         3.78 ns/op
+BenchmarkVec/addp-s4-16         	317570658	         3.79 ns/op
+BenchmarkVec/addp-s4-16         	316864768	         3.78 ns/op
+BenchmarkVec/addp-s4-16         	316818430	         3.78 ns/op
+BenchmarkVec/addp-s4-16         	316839086	         3.78 ns/op
+BenchmarkVec/addp-s4-16         	316820208	         3.79 ns/op
+BenchmarkVec/addp-s4-16         	313800850	         3.78 ns/op
+BenchmarkVec/addp-s4-16         	316532571	         3.78 ns/op
+BenchmarkVec/addp-s4-16         	314947555	         3.78 ns/op
+BenchmarkVec/addv-s5
+BenchmarkVec/addv-s5-16         	100000000	        11.2 ns/op
+BenchmarkVec/addv-s5-16         	100000000	        11.2 ns/op
+BenchmarkVec/addv-s5-16         	100000000	        11.2 ns/op
+BenchmarkVec/addv-s5-16         	100000000	        11.2 ns/op
+BenchmarkVec/addv-s5-16         	100000000	        11.2 ns/op
+BenchmarkVec/addv-s5-16         	100000000	        11.2 ns/op
+BenchmarkVec/addv-s5-16         	100000000	        11.2 ns/op
+BenchmarkVec/addv-s5-16         	100000000	        11.2 ns/op
+BenchmarkVec/addv-s5-16         	100000000	        11.2 ns/op
+BenchmarkVec/addv-s5-16         	100000000	        11.2 ns/op
+BenchmarkVec/addp-s5
+BenchmarkVec/addp-s5-16         	277063438	         4.31 ns/op
+BenchmarkVec/addp-s5-16         	277526947	         4.34 ns/op
+BenchmarkVec/addp-s5-16         	278825491	         4.32 ns/op
+BenchmarkVec/addp-s5-16         	278563927	         4.30 ns/op
+BenchmarkVec/addp-s5-16         	274739929	         4.30 ns/op
+BenchmarkVec/addp-s5-16         	277796242	         4.30 ns/op
+BenchmarkVec/addp-s5-16         	277528798	         4.31 ns/op
+BenchmarkVec/addp-s5-16         	278815317	         4.30 ns/op
+BenchmarkVec/addp-s5-16         	277842164	         4.32 ns/op
+BenchmarkVec/addp-s5-16         	277122703	         4.30 ns/op
+BenchmarkVec/addv-s6
+BenchmarkVec/addv-s6-16         	96840200	        12.6 ns/op
+BenchmarkVec/addv-s6-16         	94845157	        12.5 ns/op
+BenchmarkVec/addv-s6-16         	82893342	        12.6 ns/op
+BenchmarkVec/addv-s6-16         	93503325	        12.6 ns/op
+BenchmarkVec/addv-s6-16         	95780026	        12.6 ns/op
+BenchmarkVec/addv-s6-16         	95684019	        12.6 ns/op
+BenchmarkVec/addv-s6-16         	95486343	        12.6 ns/op
+BenchmarkVec/addv-s6-16         	95889802	        12.6 ns/op
+BenchmarkVec/addv-s6-16         	97404351	        12.6 ns/op
+BenchmarkVec/addv-s6-16         	97049108	        12.7 ns/op
+BenchmarkVec/addp-s6
+BenchmarkVec/addp-s6-16         	249042213	         4.78 ns/op
+BenchmarkVec/addp-s6-16         	251077792	         4.75 ns/op
+BenchmarkVec/addp-s6-16         	249993740	         4.76 ns/op
+BenchmarkVec/addp-s6-16         	251916667	         4.76 ns/op
+BenchmarkVec/addp-s6-16         	251786036	         4.77 ns/op
+BenchmarkVec/addp-s6-16         	251644167	         4.76 ns/op
+BenchmarkVec/addp-s6-16         	251928122	         4.75 ns/op
+BenchmarkVec/addp-s6-16         	252245097	         4.76 ns/op
+BenchmarkVec/addp-s6-16         	249320451	         4.83 ns/op
+BenchmarkVec/addp-s6-16         	250597959	         4.78 ns/op
+BenchmarkVec/addv-s7
+BenchmarkVec/addv-s7-16         	94376415	        12.6 ns/op
+BenchmarkVec/addv-s7-16         	97240066	        12.6 ns/op
+BenchmarkVec/addv-s7-16         	81185695	        12.6 ns/op
+BenchmarkVec/addv-s7-16         	93206626	        12.5 ns/op
+BenchmarkVec/addv-s7-16         	96758524	        12.6 ns/op
+BenchmarkVec/addv-s7-16         	93176563	        12.6 ns/op
+BenchmarkVec/addv-s7-16         	92642523	        12.5 ns/op
+BenchmarkVec/addv-s7-16         	96179284	        12.5 ns/op
+BenchmarkVec/addv-s7-16         	97873350	        12.6 ns/op
+BenchmarkVec/addv-s7-16         	95608045	        12.6 ns/op
+BenchmarkVec/addp-s7
+BenchmarkVec/addp-s7-16         	227766920	         5.27 ns/op
+BenchmarkVec/addp-s7-16         	226154920	         5.28 ns/op
+BenchmarkVec/addp-s7-16         	226943335	         5.26 ns/op
+BenchmarkVec/addp-s7-16         	225981013	         5.31 ns/op
+BenchmarkVec/addp-s7-16         	226876371	         5.29 ns/op
+BenchmarkVec/addp-s7-16         	227221046	         5.27 ns/op
+BenchmarkVec/addp-s7-16         	226376719	         5.30 ns/op
+BenchmarkVec/addp-s7-16         	226921654	         5.28 ns/op
+BenchmarkVec/addp-s7-16         	227529422	         5.34 ns/op
+BenchmarkVec/addp-s7-16         	226563363	         5.27 ns/op
+BenchmarkVec/addv-s8
+BenchmarkVec/addv-s8-16         	72228740	        13.9 ns/op
+BenchmarkVec/addv-s8-16         	87603926	        13.7 ns/op
+BenchmarkVec/addv-s8-16         	87207451	        13.7 ns/op
+BenchmarkVec/addv-s8-16         	87241611	        13.8 ns/op
+BenchmarkVec/addv-s8-16         	86546422	        13.7 ns/op
+BenchmarkVec/addv-s8-16         	84557586	        13.8 ns/op
+BenchmarkVec/addv-s8-16         	86431306	        13.7 ns/op
+BenchmarkVec/addv-s8-16         	86186439	        13.8 ns/op
+BenchmarkVec/addv-s8-16         	86949014	        13.8 ns/op
+BenchmarkVec/addv-s8-16         	84949406	        13.7 ns/op
+BenchmarkVec/addp-s8
+BenchmarkVec/addp-s8-16         	210634550	         5.68 ns/op
+BenchmarkVec/addp-s8-16         	211180534	         5.75 ns/op
+BenchmarkVec/addp-s8-16         	210402642	         5.68 ns/op
+BenchmarkVec/addp-s8-16         	208383818	         5.70 ns/op
+BenchmarkVec/addp-s8-16         	211109289	         5.68 ns/op
+BenchmarkVec/addp-s8-16         	210472236	         5.69 ns/op
+BenchmarkVec/addp-s8-16         	211036353	         5.73 ns/op
+BenchmarkVec/addp-s8-16         	209801874	         5.68 ns/op
+BenchmarkVec/addp-s8-16         	211164714	         5.70 ns/op
+BenchmarkVec/addp-s8-16         	210018687	         5.70 ns/op
+BenchmarkVec/addv-s9
+BenchmarkVec/addv-s9-16         	72075084	        16.6 ns/op
+BenchmarkVec/addv-s9-16         	71886414	        16.6 ns/op
+BenchmarkVec/addv-s9-16         	71790561	        16.6 ns/op
+BenchmarkVec/addv-s9-16         	70973277	        16.7 ns/op
+BenchmarkVec/addv-s9-16         	72310678	        16.6 ns/op
+BenchmarkVec/addv-s9-16         	70943725	        16.6 ns/op
+BenchmarkVec/addv-s9-16         	72225528	        16.7 ns/op
+BenchmarkVec/addv-s9-16         	70006591	        16.6 ns/op
+BenchmarkVec/addv-s9-16         	71792478	        16.6 ns/op
+BenchmarkVec/addv-s9-16         	72075426	        16.6 ns/op
+BenchmarkVec/addp-s9
+BenchmarkVec/addp-s9-16         	179962180	         6.64 ns/op
+BenchmarkVec/addp-s9-16         	180422720	         6.66 ns/op
+BenchmarkVec/addp-s9-16         	180716580	         6.71 ns/op
+BenchmarkVec/addp-s9-16         	179731831	         6.67 ns/op
+BenchmarkVec/addp-s9-16         	179815992	         6.66 ns/op
+BenchmarkVec/addp-s9-16         	179988406	         6.66 ns/op
+BenchmarkVec/addp-s9-16         	180702816	         6.64 ns/op
+BenchmarkVec/addp-s9-16         	180169606	         6.67 ns/op
+BenchmarkVec/addp-s9-16         	180580033	         6.64 ns/op
+BenchmarkVec/addp-s9-16         	180018400	         6.72 ns/op
+PASS
+ok  	pparam/fields	297.790s
