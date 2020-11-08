@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.go2": "go",
+        "chrono": "cpp"
+    }
+}

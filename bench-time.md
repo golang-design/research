@@ -141,7 +141,7 @@ go test -v -run=none -bench=WithTimer -benchtime=100000x -count=5 -cpuprofile cp
 
 Sadly, the graph shows a chunk of useless information where most of the costs shows as `runtime.ReadMemStats`:
 
-![pprof](./assets/bench-time-pprof1.png)
+![pprof](./bench-time/pprof1.png)
 
 This is because of the `StopTimer/StartTimer` implementation in the testing package calls `runtime.ReadMemStats`:
 
@@ -203,7 +203,7 @@ func (b *B) StopTimer() {
 
 And re-run the test again, then we have:
 
-![pprof](./assets/bench-time-pprof2.png)
+![pprof](./bench-time/pprof2.png)
 
 Have you noticed where the problem is? Yes, there is a heavy cost in calling `time.Now()` in a tight loop (not really surprising because it is a system call).
 
@@ -282,7 +282,7 @@ Thus, in terms of benchmarking, the actual measured time of a target code equals
 to the execution time of target code plus the overhead of calling `now()`:
 
 <p align="center">
-  <img src="./assets/bench-time.png">
+  <img src="./bench-time/flow.png">
 </p>
 
 Assume the target code consumes in `T` ns, and the overhead of `now()` is `t` ns.
