@@ -3,6 +3,8 @@
 //
 // The code below is produced by Changkun Ou <hi@changkun.de>.
 
+// +build linux
+
 package thread_test
 
 import (
@@ -61,15 +63,5 @@ func TestThread(t *testing.T) {
 	})
 	if failed {
 		t.Fatalf("failed to schedule function on the same thread.")
-	}
-}
-
-func BenchmarkThreadCall(b *testing.B) {
-	th := thread.New()
-	f := func() {}
-	b.ReportAllocs()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		th.Call(f)
 	}
 }

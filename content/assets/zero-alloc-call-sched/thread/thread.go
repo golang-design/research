@@ -25,14 +25,15 @@ type funcData struct {
 	done chan struct{}
 }
 
-// Thread offers facilities to schedule function calls to run
-// on a same thread.
+// Thread offers facilities to schedule function calls to run on a
+// specific thread.
 type Thread struct {
 	f         chan funcData
 	terminate chan struct{}
 }
 
-// Call calls f on the given thread.
+// Call calls f on the given thread and returns true if the call is
+// complete or false if failed.
 func (t *Thread) Call(f func()) bool {
 	if f == nil {
 		return false
@@ -43,9 +44,7 @@ func (t *Thread) Call(f func()) bool {
 	default:
 		done := donePool.Get().(chan struct{})
 		defer donePool.Put(done)
-		defer func() {
-			<-done
-		}()
+		defer func() { <-done }()
 
 		t.f <- funcData{fn: f, done: done}
 	}
@@ -62,7 +61,7 @@ func (t *Thread) Terminate() {
 	}
 }
 
-// New creates
+// New creates a thread.
 func New() *Thread {
 	t := Thread{
 		f:         make(chan funcData),
