@@ -1,0 +1,39 @@
+baseURL = "https://golang.design/research"
+languageCode = "en-us"
+title = "golang.design/research"
+theme = "research"
+[permalinks]
+  posts = "/:slug"
+
+[params]
+    subtitle = "(Possibly) Naïve thoughts regarding Go."
+    dateFmt = "02.01.2006"
+
+[menu]
+  [[menu.main]]
+        identifier = "posts"
+        name = "Posts"
+        url = "/posts/"
+        weight = 1 
+  [[menu.main]]
+        identifier = "tags"
+        name = "Tags"
+        url = "/tags/"
+        weight = 2
+  [[menu.footer]]
+        name = "GitHub"
+        url = "https://github.com/golang-design/research"
+        weight = 1 
+[markup]
+  [markup.highlight]
+    anchorLineNos = false
+    codeFences = true
+    guessSyntax = true
+    hl_Lines = ""
+    lineAnchors = ""
+    lineNoStart = 1
+    lineNos = true
+    lineNumbersInTable = false
+    noClasses = true
+    style = "native"
+    tabWidth = 4

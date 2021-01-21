@@ -1,0 +1,18 @@
+<header>
+	<div>
+		┏{{ strings.Repeat ( .Site.Title | len | add 2 ) "━" }}┓<br>
+		┇ <a class="logo" href="{{ .Site.BaseURL }}">{{ .Site.Title }}</a>  ┇<br>
+		┗{{ strings.Repeat ( .Site.Title | len | add 2 ) "━" }}┛
+	</div>
+	<div style="float: right;">{{ .Site.Params.subtitle }}</div><br>
+	<p>
+	<nav>
+		<a href="{{ .Site.BaseURL }}"><b>Home</b></a>.
+		{{ with .Site.Menus.main }}
+		{{ range . }}
+		<a href="{{ .URL }}"><b>{{ .Name }}</b></a>.
+		{{ end }}
+	</nav>
+	</p>
+	{{ end }}
+</header>

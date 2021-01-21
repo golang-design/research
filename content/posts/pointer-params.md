@@ -1,14 +1,24 @@
-# Pointers Might Not Be Ideal for Parameters
+---
+date: 2020-11-05T09:14:53+01:00
+toc: true
+slug: /pointer-params
+tags:
+  - Performance
+  - Parameter
+  - Pointer
+title: Pointers Might Not Be Ideal for Parameters
+---
 
 Author(s): [Changkun Ou](https://changkun.de)
 
-Last updated: 2020-11-05
-
-## Introduction
 
 We are aware that using pointers for passing parameters can avoid data copy,
 which will benefit the performance. Nevertheless, there are always some
 edge cases we might need concern.
+
+<!--more-->
+
+## Introduction
 
 Let's take this as an example:
 
@@ -163,7 +173,7 @@ $ mkdir asm && go tool compile -S vec.go > asm/vec.s
 
 The dumped assumbly code is as follows:
 
-```asm
+```
 "".vec.addv STEXT nosplit size=89 args=0x60 locals=0x0 funcid=0x0
 	0x0000 00000 (vec.go:7)	TEXT	"".vec.addv(SB), NOSPLIT|ABIInternal, $0-96
 	0x0000 00000 (vec.go:7)	FUNCDATA	$0, gclocals·33cdeccccebe80329f1fdbee7f5874cb(SB)
@@ -392,7 +402,7 @@ Vec/addp-s9-16  3.37ns ± 0%
 We could even further try a version that disables inline:
 
 ```diff
-	structTmpl = template.Must(template.New("ss").Parse(`
+structTmpl = template.Must(template.New("ss").Parse(`
 type {{.Name}} struct {
 	{{.Properties}}
 }
@@ -412,7 +422,7 @@ func (s *{{.Name}}) addp(ss *{{.Name}}) *{{.Name}} {
 
 Eventually, we will endup with the following results:
 
-![](./pointer-params/vis.png)
+![](../assets/pointer-params/vis.png)
 
 TLDR: The above figure basically demonstrates when should you pass-by-value
 or pass-by-pointer. If you are certain that your code won't produce any escape
@@ -427,7 +437,3 @@ then you should go for pass-by-value; otherwise, you should keep using pointers.
 - MOVSD. Move or Merge Scalar Double-Precision Floating-Point Value. Last access: 2020-10-27. https://www.felixcloutier.com/x86/movsd
 - ADDSD. Add Scalar Double-Precision Floating-Point Values. Last access: 2020-10-27. https://www.felixcloutier.com/x86/addsd
 - MOVEQ. Move Quadword. Last access: 2020-10-27. https://www.felixcloutier.com/x86/movq
-
-## License
-
-Copyright &copy; 2020 The [golang.design](https://golang.design) Authors.

@@ -1,14 +1,23 @@
-# Eliminating A Source of Measurement Errors in Benchmarks
+---
+date: 2020-09-30T09:02:20+01:00
+toc: true
+slug: /bench-time
+tags:
+  - Benchmark
+  - Error
+  - TimeMeasurement
+title: Eliminating A Source of Measurement Errors in Benchmarks
+---
 
 Author(s): [Changkun Ou](https://changkun.de)
-
-Last updated: 2020-09-30
-
-## Introduction
 
 About six months ago, I did a [presentation](https://golang.design/s/gobench)
 that talks about how to conduct a reliable benchmark in Go.
 Recently, I submitted an issue [#41641](https://golang.org/issue/41641) to the Go project, which is also a subtle issue that you might need to address in some cases.
+
+<!--more-->
+
+## Introduction
 
 It is all about the following code snippet:
 
@@ -141,7 +150,7 @@ go test -v -run=none -bench=WithTimer -benchtime=100000x -count=5 -cpuprofile cp
 
 Sadly, the graph shows a chunk of useless information where most of the costs shows as `runtime.ReadMemStats`:
 
-![pprof](./bench-time/pprof1.png)
+![pprof](../assets/bench-time/pprof1.png)
 
 This is because of the `StopTimer/StartTimer` implementation in the testing package calls `runtime.ReadMemStats`:
 
@@ -203,7 +212,7 @@ func (b *B) StopTimer() {
 
 And re-run the test again, then we have:
 
-![pprof](./bench-time/pprof2.png)
+![pprof](../assets/bench-time/pprof2.png)
 
 Have you noticed where the problem is? Yes, there is a heavy cost in calling `time.Now()` in a tight loop (not really surprising because it is a system call).
 
@@ -281,9 +290,7 @@ and you could see that the output remains end in the cost of `avg since: 16ns`.
 Thus, in terms of benchmarking, the actual measured time of a target code equals
 to the execution time of target code plus the overhead of calling `now()`:
 
-<p align="center">
-  <img src="./bench-time/flow.png">
-</p>
+![](../assets/bench-time/flow.png)
 
 Assume the target code consumes in `T` ns, and the overhead of `now()` is `t` ns.
 Now, let's run the target code `N` times. 
@@ -356,7 +363,3 @@ As a take-away message, if you would like to write a micro-benchmark (whose runs
 - Changkun Ou. testing: inconsistent benchmark measurements when interrupts timer. Sep 26, 2020. https://golang.org/issue/41641
 - Josh Bleecher Snyder. testing: consider calling ReadMemStats less during benchmarking. Jul 1, 2017. https://golang.org/issue/20875
 - Beyer, D., Löwe, S. & Wendler, P. Reliable benchmarking: requirements and solutions. Int J Softw Tools Technol Transfer 21, 1–29 (2019). https://doi.org/10.1007/s10009-017-0469-y
-
-## License
-
-Copyright &copy; 2020 The [golang.design](https://golang.design) Authors.
