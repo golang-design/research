@@ -1,3 +1,8 @@
+// Copyright (c) 2020 The golang.design Initiative Authors.
+// All rights reserved.
+//
+// The code below is produced by Changkun Ou <hi@changkun.de>.
+
 package pparam
 
 import (
