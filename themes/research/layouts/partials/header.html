@@ -7,10 +7,10 @@
 	<div style="float: right;">{{ .Site.Params.subtitle }}</div><br>
 	<p>
 	<nav>
-		<a href="{{ .Site.BaseURL }}"><b>Home</b></a>.
+		<a href="{{ .Site.BaseURL }}"><b>Home</b></a>
 		{{ with .Site.Menus.main }}
 		{{ range . }}
-		<a href="{{ .URL }}"><b>{{ .Name }}</b></a>.
+		| <a href="{{ .URL }}"><b>{{ .Name }}</b></a>
 		{{ end }}
 	</nav>
 	</p>

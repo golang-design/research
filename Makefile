@@ -1,4 +1,4 @@
 all:
 	hugo
 s:
-	hugo server
+	hugo server -D

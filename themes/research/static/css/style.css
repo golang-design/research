@@ -23,8 +23,11 @@ p > code {
 pre {
   color: #ffffff;
   background: #000000;
-  padding: 24px;
+  padding: 12px;
   overflow-x: auto;
+}
+code {
+  font: 14px/1.5 monospace;
 }
 article {
   padding: 24px 0;

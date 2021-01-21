@@ -1,8 +1,9 @@
 <footer>
+	------------------------------------------------------
 	<p>&copy; {{ now.Year }}
-		<a class="footer-link" href="https://golang.design"><b>The golang.design Initiative</b></a>.
+		<a class="footer-link" href="https://golang.design"><b>The golang.design Initiative</b></a>
 	{{- range .Site.Menus.footer }}
-		<a class="footer-link" href="{{ .URL }}"><b>{{ .Name }}</b></a>.
+		| <a class="footer-link" href="{{ .URL }}"><b>{{ .Name }}</b></a>
 	{{- end }}
 	</p>
 </footer>
