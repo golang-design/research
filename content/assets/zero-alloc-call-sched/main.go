@@ -41,21 +41,43 @@ options:
 		os.Exit(2)
 	}
 
-	w, err := app.NewWindow()
+	err = app.Init()
 	if err != nil {
 		panic(err)
 	}
 	defer app.Terminate()
 
+	w1, err := app.NewWindow()
+	if err != nil {
+		panic(err)
+	}
+	w2, err := app.NewWindow()
+	if err != nil {
+		panic(err)
+	}
+
+	done := make(chan struct{}, 3)
 	go func() {
+		defer func() { done <- struct{}{} }()
 		f, _ := os.Create(*traceF)
 		defer f.Close()
 		trace.Start(f)
 		defer trace.Stop()
 		time.Sleep(d)
-		w.Stop()
+		w1.Stop()
+		time.Sleep(d)
+		w2.Stop()
 	}()
-	for !w.Closed() {
-		w.Update()
-	}
+
+	go func() {
+		w1.Run()
+		done <- struct{}{}
+	}()
+	go func() {
+		w2.Run()
+		done <- struct{}{}
+	}()
+	<-done
+	<-done
+	<-done
 }
