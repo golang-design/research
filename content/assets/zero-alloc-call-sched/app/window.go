@@ -32,6 +32,7 @@ func NewWindow() (*Win, error) {
 		if err != nil {
 			return
 		}
+		w.win.MakeContextCurrent()
 	})
 	return w, nil
 }
@@ -44,24 +45,21 @@ func Terminate() {
 }
 
 // Closed asserts if the given window is closed.
+// This function can be called from any thread.
 func (w *Win) Closed() (stop bool) {
-	return mainthread.CallV(func() interface{} {
-		return w.win.ShouldClose()
-	}).(bool)
+	return w.win.ShouldClose()
 }
 
 // Update updates the frame buffer of the given window.
+// This function can be called from any thread.
 func (w *Win) Update() {
-	mainthread.Call(func() {
-		w.win.SwapBuffers()
-		// glfw.WaitEventsTimeout(1.0 / 30)
-		glfw.PollEvents()
-	})
+	w.win.SwapBuffers()
+	// glfw.WaitEventsTimeout(1.0 / 30)
+	glfw.PollEvents()
 }
 
 // Stop stops the given window.
+// This function can be called from any thread.
 func (w *Win) Stop() {
-	mainthread.Call(func() {
-		w.win.SetShouldClose(true)
-	})
+	w.win.SetShouldClose(true)
 }
