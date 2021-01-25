@@ -56,9 +56,8 @@ options:
 		panic(err)
 	}
 
-	done := make(chan struct{}, 3)
+	done := make(chan struct{}, 2)
 	go func() {
-		defer func() { done <- struct{}{} }()
 		f, _ := os.Create(*traceF)
 		defer f.Close()
 		trace.Start(f)
@@ -77,7 +76,6 @@ options:
 		w2.Run()
 		done <- struct{}{}
 	}()
-	<-done
 	<-done
 	<-done
 }

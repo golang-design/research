@@ -21,7 +21,6 @@ func init() {
 func Init(main func()) {
 	done := donePool.Get().(chan struct{})
 	defer donePool.Put(done)
-
 	go func() {
 		defer func() {
 			done <- struct{}{}
@@ -48,7 +47,6 @@ func Init(main func()) {
 func Call(f func()) {
 	done := donePool.Get().(chan struct{})
 	defer donePool.Put(done)
-
 	funcQ <- funcData{fn: f, done: done}
 	<-done
 }

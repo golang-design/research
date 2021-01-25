@@ -36,7 +36,7 @@ func NewWindow() (*Win, error) {
 		err error
 	)
 	mainthread.Call(func() {
-		w.win, err = glfw.CreateWindow(640, 480, "", nil, nil)
+		w.win, err = glfw.CreateWindow(640, 480, "golang.design/research", nil, nil)
 		if err != nil {
 			return
 		}
