@@ -1,0 +1,25 @@
+goos: darwin
+goarch: arm64
+pkg: x/mainthread
+BenchmarkDirectCall-8       	1000000000	         0.9441 ns/op	       0 B/op	       0 allocs/op
+BenchmarkDirectCall-8       	1000000000	         0.9443 ns/op	       0 B/op	       0 allocs/op
+BenchmarkDirectCall-8       	1000000000	         0.9459 ns/op	       0 B/op	       0 allocs/op
+BenchmarkDirectCall-8       	1000000000	         0.9563 ns/op	       0 B/op	       0 allocs/op
+BenchmarkDirectCall-8       	1000000000	         0.9526 ns/op	       0 B/op	       0 allocs/op
+BenchmarkDirectCall-8       	1000000000	         0.9475 ns/op	       0 B/op	       0 allocs/op
+BenchmarkDirectCall-8       	1000000000	         0.9495 ns/op	       0 B/op	       0 allocs/op
+BenchmarkDirectCall-8       	1000000000	         0.9544 ns/op	       0 B/op	       0 allocs/op
+BenchmarkDirectCall-8       	1000000000	         0.9490 ns/op	       0 B/op	       0 allocs/op
+BenchmarkDirectCall-8       	1000000000	         0.9644 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMainThreadCall-8   	 2673351	       447.7 ns/op	     120 B/op	       2 allocs/op
+BenchmarkMainThreadCall-8   	 2675954	       446.5 ns/op	     120 B/op	       2 allocs/op
+BenchmarkMainThreadCall-8   	 2675186	       448.6 ns/op	     120 B/op	       2 allocs/op
+BenchmarkMainThreadCall-8   	 2681828	       447.4 ns/op	     120 B/op	       2 allocs/op
+BenchmarkMainThreadCall-8   	 2674504	       447.1 ns/op	     120 B/op	       2 allocs/op
+BenchmarkMainThreadCall-8   	 2597884	       457.2 ns/op	     120 B/op	       2 allocs/op
+BenchmarkMainThreadCall-8   	 2670514	       446.2 ns/op	     120 B/op	       2 allocs/op
+BenchmarkMainThreadCall-8   	 2676504	       449.6 ns/op	     120 B/op	       2 allocs/op
+BenchmarkMainThreadCall-8   	 2672632	       449.1 ns/op	     120 B/op	       2 allocs/op
+BenchmarkMainThreadCall-8   	 2668776	       448.3 ns/op	     120 B/op	       2 allocs/op
+PASS
+ok  	x/mainthread	27.356s
