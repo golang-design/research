@@ -1,5 +1,5 @@
 ---
-date: 2021-01-21T10:57:59+01:00
+date: 2021-01-26T13:11:00+01:00
 toc: true
 slug: /zero-alloc-call-sched
 tags:
@@ -8,8 +8,9 @@ tags:
   - GUI
   - MainThread
   - Thread
-title: Scheduling Calls with Zero Allocation
-draft: true
+  - Tracing
+  - MemAlloc
+title: Scheduling Function Calls with Zero Allocation
 ---
 
 Author(s): [Changkun Ou](https://changkun.de)
@@ -93,7 +94,7 @@ us the opportunity to identify, at least, the main thread.
 When we would like to wrapping thread scheduling as a package `mainthread`,
 we can do something like the following:
 
-```go
+```go {linenos=inline,hl_lines=[13,16],linenostart=1}
 package mainthread // import "x/mainthread"
 
 import "runtime"
@@ -114,7 +115,7 @@ func Call(f func())
 
 As a user of such a package, one can:
 
-```go
+```go {linenos=inline,hl_lines=[15],linenostart=1}
 package main
 
 func main() {
@@ -184,6 +185,10 @@ func Call(f func()) {
 	<-done
 }
 ```
+
+> Note that we use empty struct as our channel signal, if you are not
+> familiar with empty struct and channels, you might want read two great
+> post from Dave Cheney [^empty-struct] [^curious-channels].
 
 To use such a package, one can use `mainthread.Call` to schedule
 a call to be executed on the main thread:
@@ -269,9 +274,8 @@ func NewWindow() (*Win, error) {
 // Run runs the given window and blocks until it is destroied.
 func (w *Win) Run() {
 	for !w.win.ShouldClose() {
+		w.win.SwapBuffers()
 		mainthread.Call(func() {
-			w.win.SwapBuffers()
-
 			// This function must be called from the main thread.
 			glfw.WaitEventsTimeout(1.0 / 30)
 		})
@@ -354,8 +358,10 @@ func BenchmarkMainThreadCall(b *testing.B) {
 ```
 
 Be careful with micro benchmarks here, as we discussed in our previous
-research [^bench-time], let's use the `golang.design/s/bench`
-tool [^bench-tool] for benchmarking:
+research [^bench-time], let's use the `bench`
+tool [^bench-tool] for benchmarking. `bench` is tool for executing
+Go benchmarks reliably. It automatically locks machine's performance
+and execute benchmarks 10x by default to eliminate system measurement error:
 
 ```
 $ bench
@@ -379,9 +385,7 @@ MainThreadCall-8    2.00 ±0%
 
 The benchmark result indicates that calling an empty function directly in Go
 will `1ns` whereas schedule the same empty function to the main thread
-will spend `448ns`. Thus the cost is `447ns`. If we visualizes out the trace information, we can quickly see that sending function to a channel contributes a notably cost:
-
-![](./../assets/zero-alloc-call-sched/naive-sched-delay.png)
+will spend `448ns`. Thus the cost is `447ns`.
 
 Moreover, when we talk about cost,
 we actually care about the cost of CPU as well as memory consumption.
@@ -410,37 +414,79 @@ a vicious circle.
 
 The following is a trace information of that above application runs in 6 minutes, the total heap allocation is actually 1.41 MiB (2113536-630784 byte), preety close to what we predicted before.
 
-![](./../assets/zero-alloc-call-sched/naive-sched-trace.png)
+![](./../assets/zero-alloc-call-sched/naive-sched-trace-1.png)
+![](./../assets/zero-alloc-call-sched/naive-sched-trace-2.png)
 
-How can we deal with these issues? How to optimize the exisiting naive
-implementation?
-
-
+Where does the allocation come from?
+How can we deal with these issues?
+How to optimize the exisiting naive implementation?
+Let's find out in the next section.
 
 ## Optimal Threading Control
 
-The first optimization 
+The first optimization comes to the attempt of avoid allocating
+channels. In our `Call` implementation, we allocate a signal channel
+for every function that we need to call from the main thread:
 
-```
-$ bench
-goos: darwin
-goarch: arm64
-pkg: x/mainthread-opt1
-
-name              time/op
-DirectCall-8      0.95ns ±1%
-MainThreadCall-8   440ns ±0%
-
-name              alloc/op
-DirectCall-8                        0.00B     
-MainThreadCall-8   24.0B ±0%
-
-name              allocs/op
-DirectCall-8                         0.00     
-MainThreadCall-8    1.00 ±0%
+```go {linenos=inline,hl_lines=[3],linenostart=1}
+// Call calls f on the main thread and blocks until f finishes.
+func Call(f func()) {
+	done := make(chan struct{}) // allocation!
+	funcQ <- func() {
+		f()
+		done <- struct{}{}
+	}
+	<-done
+}
 ```
 
+This means everytime when we call the `Call` method, we will have to
+allocate at least 96 bytes for a channel due to the Go compiler will
+uses `runtime.hchan` as the struct that represents the actual channel:
+
+```go
+// in src/runtime/chan.go
+
+// the hchan struct needs 96 bytes.
+type hchan struct {
+	qcount   uint
+	dataqsiz uint
+	buf      unsafe.Pointer
+	elemsize uint16
+	closed   uint32
+	elemtype *_type
+	sendx    uint
+	recvx    uint
+	recvq    waitq
+	sendq    waitq
+	lock     mutex
+}
 ```
+
+A well known trick to avoid repetitive allocation is to use
+the `sync.Pool`. One can:
+
+```go {linenos=inline,hl_lines=["1-3", 6, 7],linenostart=1}
+var donePool = sync.Pool{New: func() interface{} {
+	return make(chan struct{})
+}}
+
+func Call(f func()) {
+	done := donePool.Get().(chan struct{}) // reuse signal channel via sync.Pool!
+	defer donePool.Put(done)
+
+	funcQ <- func() {
+		f()
+		done <- struct{}{}
+	}
+	<-done
+}
+```
+
+With that simple optimization, a rebenchmarked result indicates
+an 80% reduction of memory usage:
+
+```txt {linenos=inline,hl_lines=[3,7,11],linenostart=1}
 name              old time/op    new time/op      delta
 DirectCall-8      0.95ns ±1%         0.95ns ±1%    ~     (p=0.631 n=10+10)
 MainThreadCall-8   448ns ±0%         440ns ±0%   -1.83%  (p=0.000 n=9+9)
@@ -454,101 +500,118 @@ DirectCall-8        0.00             0.00          ~     (all equal)
 MainThreadCall-8    2.00 ±0%         1.00 ±0%   -50.00%  (p=0.000 n=10+10)
 ```
 
-The second optimization:
+Can we do it even better? The answer is yes. As you can notice that
+there is still a 24B of allocation per operation. But to identify it becomes
+a little bit tricky.
 
-```
-$ bench
-goos: darwin
-goarch: arm64
-pkg: x/mainthread-opt2
+In Go, variables can be allocated from heap if:
 
-name              time/op
-DirectCall-8      0.95ns ±1%
-MainThreadCall-8   366ns ±1%
+1. Using `make` and `new` keywords explicitly, or 
+2. Escape from the stack
 
-name              alloc/op
-DirectCall-8       0.00B     
-MainThreadCall-8   0.00B     
+The second case is a little bit advance from the normal use of Go. To be short,
+escape from the execution stack to the heap is something that decided from
+compile time. The Go's compiler will decide when should a vaiable be allocated
+on the heap. The process of deciding allocate variables either on the stack or
+the heap is called _escape analysis_.
 
-name              allocs/op
-DirectCall-8        0.00     
-MainThreadCall-8    0.00
-```
+The great thing about the Go is that this information is trackable and can be
+enabled directly from the Go toolchain. One can use `-gcflags="-m"` to activate
+the escape analysis and see the result from the compile time:
 
-```
-name              old time/op    new time/op    delta
-DirectCall-8      0.95ns ±1%      0.95ns ±1%     ~     (p=0.617 n=10+10)
-MainThreadCall-8   440ns ±0%       366ns ±1%   -16.64%  (p=0.000 n=9+9)
-
-name              old alloc/op   new alloc/op    delta
-DirectCall-8       0.00B            0.00B          ~     (all equal)
-MainThreadCall-8   24.0B ±0%        0.0B       -100.00%  (p=0.000 n=10+10)
-
-name              old allocs/op  new allocs/op   delta
-DirectCall-8        0.00             0.00          ~     (all equal)
-MainThreadCall-8    1.00 ±0%         0.00       -100.00%  (p=0.000 n=10+10)
+```shell
+$ go build -gcflags="-m"
+./mainthread.go:52:11: can inline Call.func1
+./mainthread.go:48:11: leaking param: f
+./mainthread.go:52:11: func literal escapes to heap
 ```
 
-Comparing to the naive implementation:
+The compiler shows us that the sending function is leaking and the wrapper
+function that sends via our `funcQ` is causing the func literal escaping to the
+heap. The reason that func literal escapes to the heap is because a func literal
+is considered as a pointer, and sending a pointer via channel will always
+cause an escape by design.
 
+To avoid the escaping fucntion literal, instead of using a function wrapper,
+we can send a struct:
+
+```go {linenos=inline,hl_lines=["1-4", 10],linenostart=1}
+type funcdata struct {
+	fn   func()
+	done chan struct{}
+}
+
+func Call(f func()) {
+	done := donePool.Get().(chan struct{})
+	defer donePool.Put(done)
+
+	funcQ <- funcdata{fn: f, done: done} // wrap the information
+	<-done
+}
 ```
+
+and when we receives the `funcdata`:
+
+```go {linenos=inline,hl_lines=["6-8"],linenostart=1}
+func Init(main func()) {
+	...
+
+	for {
+		select {
+		case fdata := <-funcQ:
+			fdata.fn()
+			fdata.done <- struct{}{}
+		case <-done:
+			return
+		}
+	}
+}
+```
+
+After such an optimization, a re-benchmarked result indicates that
+we hint the zero-allocation goal:
+
+```txt {linenos=table,hl_lines=[3,7,11],linenostart=1}
 name              old time/op     new time/op     delta
 DirectCall-8      0.95ns ±1%      0.95ns ±1%        ~      (p=0.896 n=10+10)
 MainThreadCall-8   448ns ±0%       366ns ±1%     -18.17%   (p=0.000 n=9+9)
 
 name              old alloc/op    new alloc/op    delta
 DirectCall-8       0.00B             0.00B          ~      (all equal)
-MainThreadCall-8    120B ±0%            0B       -100.00%  (p=0.000 n=10+10)
+MainThreadCall-8    120B ±0%            0B      -100.00%   (p=0.000 n=10+10)
 
 name              old allocs/op   new allocs/op   delta
 DirectCall-8        0.00             0.00           ~      (all equal)
 MainThreadCall-8    2.00 ±0%         0.00       -100.00%   (p=0.000 n=10+10)
 ```
 
+Hooray! 🎉
+
 ## Verification and Discussion
 
-TODO:
+Before we conclude our research, let's do a final verification on the real world
+example that we had before: the GUI application.
 
-```
-bench: run benchmarks under 90% cpufreq...
-bench: go test -run=^$ -bench=. -count=10
-goos: linux
-goarch: amd64
-pkg: x/mainthread
-cpu: Intel(R) Core(TM) i9-9900K CPU @ 3.60GHz
+While a re-evaluation, we can see from the trace file that entire application
+is still allocating memory and the heap is still increasing:
 
-name     time/op
-Call-8   373ns ± 0%
-CallV-8  375ns ± 0%
+![](../assets/zero-alloc-call-sched/opt-sched-trace.png)
 
-name     alloc/op
-Call-8   0.00B
-CallV-8  0.00B
+Notably, the total allocated bytes during the application life cycle (6 minutes)
+only allocates:
 
-name     allocs/op
-Call-8    0.00
-CallV-8   0.00
-```
+$$ 958464 - 622592 = 0.32 \text{MiB} $$
 
-Before v.s. After:
+Comparing to the previous 1.41 MiB allocation, we optimized 1.08 MiB of memory
+which is exactly what was predicted before.
 
-```
-name     old time/op    new time/op    delta
-Call-8      398ns ± 0%     373ns ± 0%    -6.31%  (p=0.000 n=10+9)
-CallV-8     375ns ± 0%     375ns ± 0%      ~     (p=0.323 n=10+10)
+We might still wondering, if scheduling is not allocating memory anymore,
+who is still allocating the memory? To find out, we need a little bit help
+from the `runtime` package. The compiler translates the allocation operation
+to a runtime function `runtime.newobject`. One can add three more lines
+and prints who is exactly calling this function using `runtime.FuncForPC`:
 
-name     old alloc/op   new alloc/op   delta
-Call-8      96.0B ± 0%      0.0B       -100.00%  (p=0.000 n=10+10)
-CallV-8     0.00B          0.00B           ~     (all equal)
-
-name     old allocs/op  new allocs/op  delta
-Call-8       1.00 ± 0%      0.00       -100.00%  (p=0.000 n=10+10)
-CallV-8      0.00           0.00           ~     (all equal)
-```
-
-688128-679936 = 8192
-
-```go
+```go {linenos=inline,hl_lines=["3-5"],linenostart=1}
 // src/runtime/malloc.go
 func newobject(typ *_type) unsafe.Pointer {
 	f := FuncForPC(getcallerpc())       // add this
@@ -558,14 +621,21 @@ func newobject(typ *_type) unsafe.Pointer {
 }
 ```
 
+In above, the `getcallerpc` is a runtime private helper.
+If we execute the application again, we will see printed information similar
+to below:
+
 ```
-16 x/app-naive.(*Win).Run /Users/changkun/dev/golang.design/research/content/assets/zero-alloc-call-sched/app-naive/window.go 55
 88 runtime.acquireSudog /Users/changkun/dev/godev/go-github/src/runtime/proc.go 375
-16 x/app-naive.(*Win).Run /Users/changkun/dev/golang.design/research/content/assets/zero-alloc-call-sched/app-naive/window.go 55
+88 runtime.acquireSudog /Users/changkun/dev/godev/go-github/src/runtime/proc.go 375
+88 runtime.acquireSudog /Users/changkun/dev/godev/go-github/src/runtime/proc.go 375
 ...
 ```
 
-```go
+This demonstrates how and why the allocation still happens:
+
+```go {linenos=inline,hl_lines=[23],linenostart=1}
+// ch <- elem
 func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr) bool {
 	...
 	gp := getg()
@@ -587,21 +657,52 @@ func acquireSudog() *sudog {
 		}
 		unlock(&sched.sudoglock)
 		if len(pp.sudogcache) == 0 {
-			pp.sudogcache = append(pp.sudogcache, new(sudog)) // here
+			pp.sudogcache = append(pp.sudogcache, new(sudog)) // !here
 		}
 	}
 	...
 }
 ```
 
+Unfortunately, this is completely outside the control of the userland.
+We are not able to optimize here anymore. 
+Nevertheless, we have reached our goal for today, and this is the best
+of what we can do so far.
 
+One more thing, if you take a closer look into how much the heap grows
+for one step, you will get some calculation like this: 671744-663552=8192
+This is actually the minimum allocation size of the runtime allocator,
+which allocates a _page_. Due to the discussion of this
+topic if much more out from our goal in this research, we leave that as
+your future outlook to dig more on your own, there is a great blog post
+[^mem-alloc] as your starting point.
 
 ## Conclusion
 
-TODO:
+In this research, we covered the following topics:
 
-[^mainthread]
-[^thread]
+1. Go's runtime scheduler
+2. Scheduling on a specific thread, especially the main thread
+3. Reliable benchmarking and allocations tracing techniques
+4. Go's runtime memory allocator
+5. Go's runtime garbage collector
+6. Escape analysis
+7. Go's channel implementation
+
+There are several points we can summarize:
+
+1. A channel allocates 96 bytes of memory
+2. A function literal allocate 24 bytes of memory
+3. Escape analysis can help us identify unexpected allocations, and function literal is considered as a pointer that always escapes to the heap
+4. Sending information via a channel can cause allocation intrinsically from the runtime.
+5. Go runtime grows the the heap 8K on each step as page allocation
+
+Beyond this research, we also encapsulated all the abstractions derived from this
+research, and we published two packages: `mainthread`[^mainthread] and `thread`[^thread].
+These packages gives you the ability to schedule any function calls
+either on the main thread, or a specific thread.
+
+Have fun!
 
 ## References
 
@@ -611,5 +712,8 @@ TODO:
 [^bench-time]: Changkun Ou. "Eliminating A Source of Measurement Errors in Benchmarks
 ." 30.09.2020. https://golang.design/research/bench-time/
 [^bench-tool]: Changkun Ou. "bench: Reliable performance measurement for Go programs. All in one design." https://golang.design/s/bench
+[^empty-struct]: Dave Cheney. "The empty struct." March 25, 2014. https://dave.cheney.net/2014/03/25/the-empty-struct
+[^curious-channels]: Dave Cheney. "Curious Channels." April 30, 2013. https://dave.cheney.net/2013/04/30/curious-channels
+[^mem-alloc]: Dave Cheney. "A few bytes here, a few there, pretty soon you’re talking real memory." Jan 05, 2021. https://dave.cheney.net/2021/01/05/a-few-bytes-here-a-few-there-pretty-soon-youre-talking-real-memory
 [^mainthread]: Changkun Ou. "Package golang.design/x/mainthread." https://golang.design/s/mainthread
 [^thread]: Changkun Ou. "Package golang.design/x/thread." https://golang.design/s/thread

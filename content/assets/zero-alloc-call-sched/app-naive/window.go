@@ -7,7 +7,6 @@ package app
 
 import (
 	mainthread "x/mainthread-opt2"
-	"x/thread"
 
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
@@ -26,7 +25,6 @@ func Terminate() {
 // Win is a window.
 type Win struct {
 	win *glfw.Window
-	th  *thread.Thread
 }
 
 // NewWindow constructs a new graphical window.
@@ -52,8 +50,8 @@ func NewWindow() (*Win, error) {
 // Run runs the given window and blocks until it is destroied.
 func (w *Win) Run() {
 	for !w.win.ShouldClose() {
+		w.win.SwapBuffers()
 		mainthread.Call(func() {
-			w.win.SwapBuffers()
 			// This function must be called from the main thread.
 			glfw.WaitEventsTimeout(1.0 / 30)
 		})
