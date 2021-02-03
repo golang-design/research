@@ -2,7 +2,6 @@ baseURL = "https://golang.design/research"
 languageCode = "en-us"
 title = "golang.design/research"
 theme = "research"
-disqusShortname = "golang-design-research"
 
 [permalinks]
   posts = "/:slug"
