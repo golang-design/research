@@ -3,6 +3,7 @@
 		<article>
 			<h1 class="title">{{ .Title }}</h1>
 			<b><time>{{ .Date.Format (default "2006-01-02 15:04:05" .Site.Params.dateFmt) }}</time></b>
+			<span>PV/UV:<span id="urlstat-page-pv"></span>/<span id="urlstat-page-uv"></span></span>
 			{{ range .Params.tags }}
 			<a href="{{ "/tags/" | relLangURL }}{{ . | urlize }}">#{{ . }}</a>
 			{{ end }}
@@ -13,14 +14,4 @@
 	</main>
 {{ partial "sidebar.html" . }}
 {{ partial "scripts" .}}
-
-<!-- comments -->
-<script src="https://utteranc.es/client.js"
-        repo="golang-design/research"
-        issue-term="pathname"
-        label="comments"
-        theme="preferred-color-scheme"
-        crossorigin="anonymous"
-        async>
-</script>>
 {{ end }}
