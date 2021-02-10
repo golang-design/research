@@ -1,4 +1,4 @@
-# research
+# research ![](https://changkun.de/urlstat?mode=github&repo=golang-design/research)
 
 https://golang.design/research
 
