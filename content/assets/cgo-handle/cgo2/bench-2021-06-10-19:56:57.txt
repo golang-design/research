@@ -1,0 +1,25 @@
+goos: darwin
+goarch: arm64
+pkg: cgo-handle/cgo2
+BenchmarkHandle/non-concurrent-8         	 2972786	       400.8 ns/op
+BenchmarkHandle/non-concurrent-8         	 3040192	       390.4 ns/op
+BenchmarkHandle/non-concurrent-8         	 3058515	       391.1 ns/op
+BenchmarkHandle/non-concurrent-8         	 3036595	       391.0 ns/op
+BenchmarkHandle/non-concurrent-8         	 3050779	       392.0 ns/op
+BenchmarkHandle/non-concurrent-8         	 3042757	       389.9 ns/op
+BenchmarkHandle/non-concurrent-8         	 3020358	       404.6 ns/op
+BenchmarkHandle/non-concurrent-8         	 3008872	       396.0 ns/op
+BenchmarkHandle/non-concurrent-8         	 3024003	       392.7 ns/op
+BenchmarkHandle/non-concurrent-8         	 3051001	       392.9 ns/op
+BenchmarkHandle/concurrent-8             	 1586451	       755.9 ns/op
+BenchmarkHandle/concurrent-8             	 1588989	       754.7 ns/op
+BenchmarkHandle/concurrent-8             	 1543646	       757.2 ns/op
+BenchmarkHandle/concurrent-8             	 1586863	       755.3 ns/op
+BenchmarkHandle/concurrent-8             	 1584315	       758.5 ns/op
+BenchmarkHandle/concurrent-8             	 1584865	       759.3 ns/op
+BenchmarkHandle/concurrent-8             	 1575646	       769.2 ns/op
+BenchmarkHandle/concurrent-8             	 1496425	       760.6 ns/op
+BenchmarkHandle/concurrent-8             	 1572453	       759.0 ns/op
+BenchmarkHandle/concurrent-8             	 1585522	       779.9 ns/op
+PASS
+ok  	cgo-handle/cgo2	35.840s
