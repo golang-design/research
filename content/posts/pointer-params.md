@@ -11,6 +11,7 @@ title: Pointers Might Not Be Ideal for Parameters
 
 Author(s): [Changkun Ou](https://changkun.de)
 
+Permalink: https://golang.design/research/pointer-params
 
 We are aware that using pointers for passing parameters can avoid data copy,
 which will benefit the performance. Nevertheless, there are always some

@@ -15,6 +15,8 @@ title: Scheduling Function Calls with Zero Allocation
 
 Author(s): [Changkun Ou](https://changkun.de)
 
+Permalink: https://golang.design/research/zero-alloc-call-sched
+
 GUI programming in Go is a little bit tricky. The infamous issue
 regarding interacting with legacy, GUI frameworks is that
 most graphics related APIs must be called from the main thread.

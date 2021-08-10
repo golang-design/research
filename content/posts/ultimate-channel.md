@@ -11,6 +11,8 @@ title: The Ultimate Channel Abstraction
 
 Author(s): [Changkun Ou](https://changkun.de)
 
+Permalink: https://golang.design/research/ultimate-channel
+
 Recently, I have been rethinking the programming patterns regarding computer graphics applications, and have been written a 3D graphics package in Go, called [polyred](https://poly.red).
 While I was designing the rendering execution pipeline, a tricky deadlock struggled with me for a long time and led to creating an unbounded channel as a workaround solution eventually.
 

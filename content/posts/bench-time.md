@@ -11,6 +11,8 @@ title: Eliminating A Source of Measurement Errors in Benchmarks
 
 Author(s): [Changkun Ou](https://changkun.de)
 
+Permalink: https://golang.design/research/bench-time
+
 About six months ago, I did a [presentation](https://golang.design/s/gobench)
 that talks about how to conduct a reliable benchmark in Go.
 Recently, I submitted an issue [#41641](https://golang.org/issue/41641) to the Go project, which is also a subtle issue that you might need to address in some cases.
