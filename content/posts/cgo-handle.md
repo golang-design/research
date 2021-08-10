@@ -28,15 +28,15 @@ Cgo is the de facto approach to interact with the C facility in Go. Nevertheless
 #include <stdio.h>
 
 void myprint() {
-    printf("Hello %s", "World");
+	printf("Hello %s", "World");
 }
 */
 import "C"
 
 func main() {
-    C.myprint()
-    // Output:
-    // Hello World
+	C.myprint()
+	// Output:
+	// Hello World
 }
 ```
 
@@ -46,7 +46,7 @@ In the [`golang.design/x/clipboard`](https://golang.design/x/clipboard) package,
 
 ```go
 go func() {
-  C.doWork() // Cgo: call a C function, and do stuff on C side
+	C.doWork() // Cgo: call a C function, and do stuff on C side
 }()
 
 // .. do stuff on Go side ..
@@ -87,23 +87,23 @@ import "C"
 //
 //   panic: runtime error: cgo argument has Go pointer to Go pointer
 var (
-    funcCallback   func()
-    funcCallbackMu sync.Mutex
+	funcCallback   func()
+	funcCallbackMu sync.Mutex
 )
 
 type gocallback struct{ f func() }
 
 func main() {
-    go func() {
-        ret := C.myfunc(unsafe.Pointer(&gocallback{func() {
-            funcCallbackMu.Lock()
-            f := funcCallback // must use a global function variable.
-            funcCallbackMu.Unlock()
-            f()
-        }}))
-        // ... do work ...
-    }()
-    // ... do work ...
+	go func() {
+		ret := C.myfunc(unsafe.Pointer(&gocallback{func() {
+			funcCallbackMu.Lock()
+			f := funcCallback // must use a global function variable.
+			funcCallbackMu.Unlock()
+			f()
+		}}))
+		// ... do work ...
+	}()
+	// ... do work ...
 }
 ```
 
@@ -113,10 +113,10 @@ In above, the `gocallback` pointer on the Go side is passed through the  C funct
 // myfunc will trigger a callback, c_func, whenever it is needed and pass
 // the gocallback data though the void* parameter.
 void c_func(void *data) {
-    void *gocallback = userData;
-    // the gocallback is received as a pointer, we pass it as an argument
-    // to the go_func_callback
-    go_func_callback(gocallback);
+	void *gocallback = userData;
+	// the gocallback is received as a pointer, we pass it as an argument
+	// to the go_func_callback
+	go_func_callback(gocallback);
 }
 ```
 
@@ -125,7 +125,7 @@ The `go_func_callback` knows its parameter is typed as `gocallback`. Thus a type
 ```go
 //go:export go_func_callback
 func go_func_callback(c unsafe.Pointer) {
-    (*gocallback)(c).call()
+	(*gocallback)(c).call()
 }
 
 func (c *gocallback) call() { c.f() }
@@ -135,10 +135,10 @@ The function `f` in the `gocallback` is exactly what we would like to call:
 
 ```go
 func() {
-    funcCallbackMu.Lock()
-    f := funcCallback // must use a global function variable.
-    funcCallbackMu.Unlock()
-    f()               // get called
+	funcCallbackMu.Lock()
+	f := funcCallback // must use a global function variable.
+	funcCallbackMu.Unlock()
+	f()               // get called
 }
 ```
 
@@ -196,10 +196,10 @@ import "C"
 import "runtime/cgo"
 
 func main() {
-    s := "Hello The golang.design Initiative"
-    C.myprint(C.uintptr_t(cgo.NewHandle(s)))
-    // Output:
-    // Hello The golang.design Initiative
+	s := "Hello The golang.design Initiative"
+	C.myprint(C.uintptr_t(cgo.NewHandle(s)))
+	// Output:
+	// Hello The golang.design Initiative
 }
 ```
 
@@ -212,7 +212,7 @@ The string `s` is passed through a created handle to the C function `myprint`, a
 extern void MyGoPrint(uintptr_t handle);
 // A C function
 void myprint(uintptr_t handle) {
-    MyGoPrint(handle);
+	MyGoPrint(handle);
 }
 ```
 
@@ -221,10 +221,10 @@ The `myprint` passes the handle back to a Go function `MyGoPrint`:
 ```go
 //go:export MyGoPrint
 func MyGoPrint(handle C.uintptr_t) {
-    h := cgo.Handle(handle)
-    s := h.Value().(string)
-    println(s)
-    h.Delete()
+	h := cgo.Handle(handle)
+	s := h.Value().(string)
+	println(s)
+	h.Delete()
 }
 ```
 
@@ -243,22 +243,22 @@ import "C"
 
 func main() {
 
-    ch := make(chan struct{})
-    handle := cgo.NewHandle(ch)
-    go func() {
-        C.myfunc(C.uintptr_t(handle)) // myfunc will call goCallback when needed.
-        ...
-    }()
+	ch := make(chan struct{})
+	handle := cgo.NewHandle(ch)
+	go func() {
+		C.myfunc(C.uintptr_t(handle)) // myfunc will call goCallback when needed.
+		...
+	}()
 
-    <-ch // we got notified from the myfunc.
-    handle.Delete() // no need thus delete the handle.
-    ...
+	<-ch // we got notified from the myfunc.
+	handle.Delete() // no need thus delete the handle.
+	...
 }
 
 //go:export goCallback
 func goCallback(h C.uintptr_t) {
-    v := cgo.Handle(h).Value().(chan struct{})
-    v <- struct{}
+	v := cgo.Handle(h).Value().(chan struct{})
+	v <- struct{}
 }
 ```
 
@@ -301,39 +301,39 @@ With all the analysis above, we can write the following part of the implementati
 type wrap struct{ v interface{} }
 
 func NewHandle(v interface{}) Handle {
-    var k uintptr
+	var k uintptr
 
-    rv := reflect.ValueOf(v)
-    switch rv.Kind() {
-    case reflect.Ptr, reflect.UnsafePointer, reflect.Slice,
-        reflect.Map, reflect.Chan, reflect.Func:
-        if rv.IsNil() {
-            panic("cgo: cannot use Handle for nil value")
-        }
+	rv := reflect.ValueOf(v)
+	switch rv.Kind() {
+	case reflect.Ptr, reflect.UnsafePointer, reflect.Slice,
+		reflect.Map, reflect.Chan, reflect.Func:
+		if rv.IsNil() {
+			panic("cgo: cannot use Handle for nil value")
+		}
 
-        k = rv.Pointer()
-    default:
-        // Wrap and turn a value parameter into a pointer. This enables
-        // us to always store the passing object as a pointer, and helps
-        // to identify which of whose are initially pointers or values
-        // when Value is called.
-        v = &wrap{v}
-        k = reflect.ValueOf(v).Pointer()
-    }
+		k = rv.Pointer()
+	default:
+		// Wrap and turn a value parameter into a pointer. This enables
+		// us to always store the passing object as a pointer, and helps
+		// to identify which of whose are initially pointers or values
+		// when Value is called.
+		v = &wrap{v}
+		k = reflect.ValueOf(v).Pointer()
+	}
 
-    ...
+	...
 }
 ```
 
 Note that the implementation above treats the values differently: For `reflect.Ptr`, `reflect.UnsafePointer`, `reflect.Slice`, `reflect.Map`, `reflect.Chan`, `reflect.Func` types, they are already pointers escaped to the heap, we can safely get the address from them. For the other kinds, we need to turn them from a value to a pointer and also make sure they will always escape to the heap. That is the part:
 
 ```go
-        // Wrap and turn a value parameter into a pointer. This enables
-        // us to always store the passing object as a pointer, and helps
-        // to identify which of whose are initially pointers or values
-        // when Value is called.
-        v = &wrap{v}
-        k = reflect.ValueOf(v).Pointer()
+		// Wrap and turn a value parameter into a pointer. This enables
+		// us to always store the passing object as a pointer, and helps
+		// to identify which of whose are initially pointers or values
+		// when Value is called.
+		v = &wrap{v}
+		k = reflect.ValueOf(v).Pointer()
 ```
 
 Now we have turned everything into an escaped value on the heap. The next thing we have to ask is: what if the two values are the same? That means the `v` passed to `cgo.NewHandle(v)` is the same object. Then we will get the same memory address in `k` at this point.
@@ -343,19 +343,19 @@ The easy case is, of course, if the address is not on the global map, then we do
 
 ```go
 func NewHandle(v interface{}) Handle {
-    ...
+	...
 
-    // v was escaped to the heap because of reflection. As Go do not have
-    // a moving GC (and possibly lasts true for a long future), it is
-    // safe to use its pointer address as the key of the global map at
-    // this moment. The implementation must be reconsidered if moving GC
-    // is introduced internally in the runtime.
-    actual, loaded := m.LoadOrStore(k, v)
-    if !loaded {
-        return Handle(k)
-    }
+	// v was escaped to the heap because of reflection. As Go do not have
+	// a moving GC (and possibly lasts true for a long future), it is
+	// safe to use its pointer address as the key of the global map at
+	// this moment. The implementation must be reconsidered if moving GC
+	// is introduced internally in the runtime.
+	actual, loaded := m.LoadOrStore(k, v)
+	if !loaded {
+	    return Handle(k)
+	}
 
-    ...
+	...
 }
 ```
 
@@ -363,28 +363,28 @@ Otherwise, we have to check the old value in the global map, if it is the same v
 
 ```go
 func NewHandle(v interface{}) Handle {
-    ...
+	...
 
-    arv := reflect.ValueOf(actual)
-    switch arv.Kind() {
-    case reflect.Ptr, reflect.UnsafePointer, reflect.Slice,
-        reflect.Map, reflect.Chan, reflect.Func:
-        // The underlying object of the given Go value already have
-        // its existing handle.
-        if arv.Pointer() == k {
-            return Handle(k)
-        }
+	arv := reflect.ValueOf(actual)
+	switch arv.Kind() {
+	case reflect.Ptr, reflect.UnsafePointer, reflect.Slice,
+		reflect.Map, reflect.Chan, reflect.Func:
+		// The underlying object of the given Go value already have
+		// its existing handle.
+		if arv.Pointer() == k {
+			return Handle(k)
+		}
 
-        // If the loaded pointer is inconsistent with the new pointer,
-        // it means the address has been used for different objects
-        // because of GC and its address is reused for a new Go object,
-        // meaning that the Handle does not call Delete explicitly when
-        // the old Go value is not needed. Consider this as a misuse of
-        // a handle, do panic.
-        panic("cgo: misuse of a Handle")
-    default:
-        panic("cgo: Handle implementation has an internal bug")
-    }
+		// If the loaded pointer is inconsistent with the new pointer,
+		// it means the address has been used for different objects
+		// because of GC and its address is reused for a new Go object,
+		// meaning that the Handle does not call Delete explicitly when
+		// the old Go value is not needed. Consider this as a misuse of
+		// a handle, do panic.
+		panic("cgo: misuse of a Handle")
+	default:
+		panic("cgo: Handle implementation has an internal bug")
+	}
 }
 ```
 
@@ -397,14 +397,14 @@ When implementing the `Value()` method, we see why a `wrap` struct beneficial:
 
 ```go
 func (h Handle) Value() interface{} {
-    v, ok := m.Load(uintptr(h))
-    if !ok {
-        panic("cgo: misuse of an invalid Handle")
-    }
-    if wv, ok := v.(*wrap); ok {
-        return wv.v
-    }
-    return v
+	v, ok := m.Load(uintptr(h))
+	if !ok {
+		panic("cgo: misuse of an invalid Handle")
+	}
+	if wv, ok := v.(*wrap); ok {
+		return wv.v
+	}
+	return v
 }
 ```
 
@@ -414,10 +414,10 @@ Lastly, the `Delete` method becomes trivial:
 
 ```go
 func (h Handle) Delete() {
-    _, ok := m.LoadAndDelete(uintptr(h))
-    if !ok {
-        panic("cgo: misuse of an invalid Handle")
-    }
+	_, ok := m.LoadAndDelete(uintptr(h))
+	if !ok {
+		panic("cgo: misuse of an invalid Handle")
+	}
 }
 ```
 
@@ -445,18 +445,18 @@ If we use the same approach, what would be a possible concurrent-safe implementa
 
 ```go
 func NewHandle(v interface{}) Handle {
-    h := atomic.AddUintptr(&handleIdx, 1)
-    if h == 0 {
-        panic("runtime/cgo: ran out of handle space")
-    }
+	h := atomic.AddUintptr(&handleIdx, 1)
+	if h == 0 {
+		panic("runtime/cgo: ran out of handle space")
+	}
 
-    handles.Store(h, v)
-    return Handle(h)
+	handles.Store(h, v)
+	return Handle(h)
 }
 
 var (
-    handles   = sync.Map{} // map[Handle]interface{}
-    handleIdx uintptr      // atomic
+	handles   = sync.Map{} // map[Handle]interface{}
+	handleIdx uintptr      // atomic
 )
 ```
 
@@ -466,11 +466,11 @@ The remaining work becomes trivial. When we want to use the handle to retrieve t
 
 ```go
 func (h Handle) Value() interface{} {
-    v, ok := handles.Load(uintptr(h))
-    if !ok {
-        panic("runtime/cgo: misuse of an invalid Handle")
-    }
-    return v
+	v, ok := handles.Load(uintptr(h))
+	if !ok {
+		panic("runtime/cgo: misuse of an invalid Handle")
+	}
+	return v
 }
 ```
 
@@ -478,10 +478,10 @@ Further, if we are done with the handle, one can delete it from the value map:
 
 ```go
 func (h Handle) Delete() {
-    _, ok := handles.LoadAndDelete(uintptr(h))
-    if !ok {
-        panic("runtime/cgo: misuse of an invalid Handle")
-    }
+	_, ok := handles.LoadAndDelete(uintptr(h))
+	if !ok {
+		panic("runtime/cgo: misuse of an invalid Handle")
+	}
 }
 ```
 
@@ -491,23 +491,23 @@ Aside from a future re-implementation of `sync.Map` that optimizes parallelism, 
 
 ```go
 func BenchmarkHandle(b *testing.B) {
-    b.Run("non-concurrent", func(b *testing.B) {
-        for i := 0; i < b.N; i++ {
-            h := cgo.NewHandle(i)
-            _ = h.Value()
-            h.Delete()
-        }
-    })
-    b.Run("concurrent", func(b *testing.B) {
-        b.RunParallel(func(pb *testing.PB) {
-            var v int
-            for pb.Next() {
-                h := cgo.NewHandle(v)
-                _ = h.Value()
-                h.Delete()
-            }
-        })
-    })
+	b.Run("non-concurrent", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			h := cgo.NewHandle(i)
+			_ = h.Value()
+			h.Delete()
+	    }
+	})
+	b.Run("concurrent", func(b *testing.B) {
+		b.RunParallel(func(pb *testing.PB) {
+			var v int
+			for pb.Next() {
+				h := cgo.NewHandle(v)
+				_ = h.Value()
+				h.Delete()
+			}
+		})
+	})
 }
 ```
 
