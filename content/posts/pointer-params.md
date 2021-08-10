@@ -6,7 +6,7 @@ tags:
   - Performance
   - Parameter
   - Pointer
-title: Pointers Might Not Be Ideal for Parameters
+title: Pointers Might Not be Ideal as Arguments
 ---
 
 Author(s): [Changkun Ou](https://changkun.de)

@@ -142,7 +142,7 @@ As one can observe from the above example, it simulates a resize event
 of a GUI window at every event processing loop. Whenever the size of
 the GUI window is changed, the underlying rendering should adapt to that,
 for instance, reallocating the rendering buffers. To allow the rendering
-thread understand the change, another channel is used to communicate from
+thread to understand the change, another channel is used to communicate from
 the event thread to the rendering thread.
 
 It sounds like a perfect design, but a nasty deadlock is hidden in the
@@ -194,7 +194,7 @@ producing content for the buffer while the consumer consumes the buffer.
 If the buffer is full, it is easy to send either producer or consumer to
 sleep. However, the key difference here is: On the two sides of
 communication, they both play the role of producer and consumer
-simoutainiously, and they both relying on each other.
+simultaneously, and they both relying on each other.
 
 What can we do to solve the above deadlock? Let's reveal two approaches in this
 article.
@@ -242,7 +242,7 @@ seems there is no better way to improve it. What else could we do?
 ## Solution 2: Unbounded Channel
 
 We may first come up with this idea: Can we make a channel that contains
-an buffer with infinite capacity, i.e. unbounded channel? Though the
+a buffer with infinite capacity, i.e. unbounded channel? Though the
 language, it is not possible yet. However, such a pattern can be easily
 constructed:
 
@@ -292,7 +292,7 @@ is possible or not. If not, it keeps appending the data to the queue `q`.
 When the input channel is closed, an additional loop over the queue `q`
 is used to run out all cached elements, then close the output channel.
 
-Hence, another fix of the deadlock using unbounded channel would be:
+Hence, another fix of the deadlock using an unbounded channel would be:
 
 ```diff
 func main() {
@@ -350,7 +350,7 @@ The major drawback is that an unbounded channel may run out of memory (OOM).
 If there is a concurrency bug, the running application will keep eats memory
 from OS and eventually leads to OOM. Developers argue that an unbounded channel
 should be added to the language mainly because the `MakeChan` function is
-returning an `interface{}` typed channel which brings weakly typed flaw into
+returning an `interface{}` typed channel which brings a weakly typed flaw into
 the statically typed Go code. Eventually, Ian Lance Taylor from the Go team
 [clarifies](https://golang.org/issue/20352#issuecomment-365438524) that
 an unbounded channel may have a sort of usage but is unworthy to be added
@@ -438,7 +438,7 @@ In this article, we talked about a generic implementation of a channel with arbi
 Well, the answer is non-trivial. As a generalization of channels, the other common operations should also be supported, such as `len()`, `cap()`, and `close()`.
 If we think carefully about the semantics of closing a channel, it is really just about closing the ability of input to that channel. Hence, implementing the `close()` functionality, it is simple and straightforward.
 
-However, the `len()` is not a thread-safe operation for arrays, slices, and maps, but it becomes preety clear that it has to be thread safe for channels, otherwise, there is no way to fetch channel length atomically. Nonetheless, does it really make sense to get the length of a channel? As we know that channel is typically used for synchronization purposes. If there is a `len(ch)` that happens concurrently with a send/receive operation, there is no guarantee what is the return of the `len()`. The length is outdated immediately as `len()` returns.
+However, the `len()` is not a thread-safe operation for arrays, slices, and maps, but it becomes pretty clear that it has to be thread safe for channels, otherwise, there is no way to fetch channel length atomically. Nonetheless, does it really make sense to get the length of a channel? As we know that channel is typically used for synchronization purposes. If there is a `len(ch)` that happens concurrently with a send/receive operation, there is no guarantee what is the return of the `len()`. The length is outdated immediately as `len()` returns.
 This scenario is neither discussed in the [language specification](https://golang.org/ref/spec), or the [Go's memory model](https://golang.org/ref/mem). After all, Do we really need a `len()` operation for the ultimate channel abstraction? The answer speaks for itself.
 
 ## Further Reading Suggestions
