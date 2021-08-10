@@ -15,7 +15,7 @@ Author: [Changkun Ou](https://changkun.de)
 
 Permalink: [https://golang.design/research/cgo-handle](https://golang.design/research/cgo-handle)
 
-In the Go 1.17 release, we contributed a new cgo facility [runtime/cgo.Handle](https://tip.golang.org/pkg/runtime/cgo/#Handle) in order to help future cgo applications better and easier to build concurrent-safe applications while passing pointers between Go and C. This article will guide though the feature by asking what the feature offers to us, why we need such a facility, and how exactly we contributed to the implementation eventually.
+In the Go 1.17 release, we contributed a new cgo facility [runtime/cgo.Handle](https://tip.golang.org/pkg/runtime/cgo/#Handle) in order to help future cgo applications better and easier to build concurrent-safe applications while passing pointers between Go and C. This article will guide us through the feature by asking what the feature offers to us, why we need such a facility, and how exactly we contributed to the implementation eventually.
 
 <!--more-->
 
@@ -40,7 +40,7 @@ func main() {
 }
 ```
 
-A few months ago, while we were working on building a new package [`golang.design/x/clipboard`](https://golang.design/x/clipboard), a package that offers cross-platform clipboard access. We found out, there is a lacking of the facility in Go, despite the variety of approaches in the wild, still suffering from soundness and performance issues.
+A few months ago, while we were working on building a new package [`golang.design/x/clipboard`](https://golang.design/x/clipboard), a package that offers cross-platform clipboard access. We found out, there is a lacking of facility in Go, despite the variety of approaches in the wild, still suffering from soundness and performance issues.
 
 In the [`golang.design/x/clipboard`](https://golang.design/x/clipboard) package, we had to cooperate with cgo to access system level APIs (technically, it is an API from a legacy and widely used C system), but lacking the facility of knowing the execution progress on the C side. For instance, on the Go side, we have to call the C code in a goroutine, then do something else in parallel:
 
@@ -55,11 +55,11 @@ go func() {
 However, under certain circumstances, we need a sort of mechanism to understand the execution progress from the C side, which brings the need of
 communication and synchronization between the Go and C. For instance, if we need our Go code to wait until the C side code finishes some initialization work until some execution point to proceed, we will need this type of communication precisely to understand the progress of a C function.
 
-A real example that we encountered was the need to interact with the clipboard facility. In Linux's [X window environment](https://en.wikipedia.org/wiki/X_Window_System), clipboards are decentralized and can only be owned by each application. The ones who need access to clipboard information required to create their clipboard instance. Say an application `A` wants to paste something into the clipboard, it has to request to the X window server, then become a clipboard owner to send the information back to other applications whenever they send a copy request.
+A real example that we encountered was the need to interact with the clipboard facility. In Linux's [X window environment](https://en.wikipedia.org/wiki/X_Window_System), clipboards are decentralized and can only be owned by each application. The ones who need access to clipboard information are required to create their clipboard instance. Say an application `A` wants to paste something into the clipboard, it has to request to the X window server, then become a clipboard owner to send the information back to other applications whenever they send a copy request.
 
-This design was considered natural and often required applications to cooperate: If another application `B` tries to make a request, to become the next owner of the clipboard, then `A` will lost its ownership. Afterwards, the copy requests from application `C`, `D`, and so on, will be forwarded to the application `B` instead of `A`. Similar to a shared region of memory being overwritten by somebody else and the original owner losts its access.
+This design was considered natural and often required applications to cooperate: If another application `B` tries to make a request, to become the next owner of the clipboard, then `A` will lose its ownership. Afterwards, the copy requests from the application `C`, `D`, and so on, will be forwarded to the application `B` instead of `A`. Similar to a shared region of memory being overwritten by somebody else and the original owner lost its access.
 
-With the above context information, one can understand that before an application starts to "paste" (serve) the clipboard information, it first obtains the clipboard ownership. Until we get the ownership, the clipboard information will not be available for access purpose.
+With the above context information, one can understand that before an application starts to "paste" (serve) the clipboard information, it first obtains the clipboard ownership. Until we get the ownership, the clipboard information will not be available for access purposes.
 In other words, if a clipboard API is designed in the following way:
 
 ```go
@@ -123,7 +123,7 @@ void c_func(void *data) {
 The `go_func_callback` knows its parameter is typed as `gocallback`. Thus a type casting is safe to do the call:
 
 ```go
-//export go_func_callback
+//go:export go_func_callback
 func go_func_callback(c unsafe.Pointer) {
     (*gocallback)(c).call()
 }
@@ -146,7 +146,7 @@ Note that the `funcCallback` must be a global function variable. Otherwise, it i
 
 Furthermore, an immediate reaction to the readability of the above code is: too complicated. The demonstrated approach can only assign one function at a time, which is also a violation of the concurrent nature. Any per-goroutine dedicated application will not benefit from this approach because they need a per-goroutine function callback instead of a single global callback. By then, we wonder if there is a better and elegant approach to deal with it.
 
-Though our research, we found that the need occurs quite often in the community, and also being proposed in [golang/go#37033](https://golang.org/issue/37033). Luckily, such a facility is now ready in Go 1.17 :)
+Through our research, we found that the need occurs quite often in the community, and is also being proposed in [golang/go#37033](https://golang.org/issue/37033). Luckily, such a facility is now ready in Go 1.17 :)
 
 ## What is `runtime/cgo.Handle`?
 
@@ -255,7 +255,7 @@ func main() {
     ...
 }
 
-//export goCallback
+//go:export goCallback
 func goCallback(h C.uintptr_t) {
     v := cgo.Handle(h).Value().(chan struct{})
     v <- struct{}
@@ -268,7 +268,7 @@ Next question: How to implement `cgo.Handle`?
 
 ## First Attempt
 
-The first attempt was a lot complicated. Since we need a centralized way to manage all pointers in a concurrent-safe way, the quickest idea comes to our mind was the `sync.Map` that maps an unique number to the desired value. Hence, we can easily use a global `sync.Map`:
+The first attempt was a lot complicated. Since we need a centralized way to manage all pointers in a concurrent-safe way, the quickest idea that comes to our mind was the `sync.Map` that maps a unique number to the desired value. Hence, we can easily use a global `sync.Map`:
 
 ```go
 package cgo
@@ -280,15 +280,15 @@ However, we have to think about the core challenge:
 How to allocate a runtime-level unique ID? Passing an integer between Go and C is relatively easy, what could be a unique representation for a given value?
 
 The first idea is the memory address. Because every pointer or value
-are stored somewhere in memory, if we can have the information, it would
+is stored somewhere in memory, if we can have the information, it would
 be very easy to use as the ID of the value because each value has exactly one unique memory address.
 
-To complete this idea, we need to be a little bit cautious: Will the memory address of a living value be changed at some point? The question leads to two more questions:
+To complete this idea, we need to be a little bit cautious: Will the memory address of a living value is changed at some point? The question leads to two more questions:
 
 1. What if a value is on the goroutine stack? If so, the value will be released when the goroutine is dead.
 2. Go is a garbage-collected language. What if the garbage collector moves and compacts the value to a different place? Then the memory address of the value will be changed, too.
 
-Based on our years of [experience and understanding](https://golang.design/s/more) to the runtime, we learned that the Go's garbage collector before 1.17 is always not moving and the machanism is also very unlikely to be change. That means, if a value is living on the heap, it will not be moved to other places. With this fact, we are good with the second question.
+Based on our years of [experience and understanding](https://golang.design/s/more) of the runtime, we learned that the Go's garbage collector before 1.17 is always not moving and the mechanism is also very unlikely to change. That means, if a value is living on the heap, it will not be moved to other places. With this fact, we are good with the second question.
 
 It is a little bit tricky for the first question: a value on the stack may move as the stack grows. The more intractable part is that compiler optimization may move values between stacks, and runtime may move the stack when the stack ran out of its size.
 
@@ -485,7 +485,7 @@ func (h Handle) Delete() {
 }
 ```
 
-In this implementation, we do not have to assume the runtime mechanism but just use of the language. As long as the Go 1 compatibility keeps the promise `sync.Map` to work, there will be no need to rework the whole `Handle` design. Because of its simplicity, this is the accepted approach (see [CL 295369](https://golang.org/cl/295369)) by the Go team.
+In this implementation, we do not have to assume the runtime mechanism but just use the language. As long as the Go 1 compatibility keeps the promise `sync.Map` to work, there will be no need to rework the whole `Handle` design. Because of its simplicity, this is the accepted approach (see [CL 295369](https://golang.org/cl/295369)) by the Go team.
 
 Aside from a future re-implementation of `sync.Map` that optimizes parallelism, the `Handle` will automatically benefit from it. Let us do a final benchmark that compares the previous method and the current approach:
 
@@ -524,12 +524,12 @@ Simpler, faster, why not?
 This article discussed the newly introduced `runtime/cgo.Handle` facility coming in the Go 1.17 release that we contributed. The `Handle` facility enables us to pass Go values between Go and C back and forth without breaking the cgo pointer passing rules. After a short introduction to the usage of the feature, we first discussed a first attempt implementation based on the fact that the runtime garbage collector is not a moving GC and the escape behavior of `interface{}` arguments. 
 After a few discussions of the ambiguity of the Handle semantics and the drawbacks in the previous implementation, we also introduced a straightforward and better-performed approach and demonstrated its performance.
 
-As real-world demonstration, we have been using the mentioned two approaches
+As a real-world demonstration, we have been using the mentioned two approaches
 in two of our released packages for quite a long time:
 [golang.design/x/clipboard](https://github.com/golang-design/clipboard)
 and [golang.design/x/hotkey](https://github.com/golang-design/hotkey)
 before in their `internal/cgo` package. 
-We are looking forward to switch to the officially released `runtime/cgo`
+We are looking forward to switching to the officially released `runtime/cgo`
 package in the Go 1.17 release.
 
 For future work, one can foresee that a possible limitation in the accepted
@@ -541,7 +541,7 @@ When we allocate 100 handles per second, the handle space can run out in
 
 *_If you are interested and think this is a serious issue, feel free to
 [CC us](mailto:hi[at]golang.design) when you send a CL,
-it would also interesting for us to read your excellent approach._
+it would also be interesting for us to read your excellent approach._
 
 
 ## Further Reading Suggestions
