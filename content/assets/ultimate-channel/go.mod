@@ -1,3 +1,3 @@
-module deadlock-drawcall
+module ultimate-chan
 
 go 1.17
