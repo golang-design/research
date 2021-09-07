@@ -427,7 +427,7 @@ Eventually, we will endup with the following results:
 
 TLDR: The above figure basically demonstrates when should you pass-by-value
 or pass-by-pointer. If you are certain that your code won't produce any escape
-variables, and the size of your argument is smaller than 4*4 = 16 bytes,
+variables, and the size of your argument is smaller than 4*8 = 32 bytes,
 then you should go for pass-by-value; otherwise, you should keep using pointers.
 
 ## Further Reading Suggestions
