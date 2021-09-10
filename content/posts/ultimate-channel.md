@@ -431,6 +431,97 @@ func main() {
 
 *_This code is executable on go2go playground:_ https://go2goplay.golang.org/p/krLWm7ZInnL
 
+## Real-world Use Cases
+
+As always, we further made this generic abstraction avaliable as a package to use, and we call it [`chann`](https://golang.design/s/chann), and the API design wraps the above mentioned `MakeChan` function as follows:
+
+```go
+package chann // import "golang.design/x/chann"
+
+// Chann is a generic channel abstraction that can be either buffered,
+// unbuffered, or unbounded. To create a new channel, use New to allocate
+// one, and use Cap to configure the capacity of the channel.
+type Chann[T any] struct { ... }
+
+// New returns a Chann that may represent a buffered, an unbuffered or
+// an unbounded channel. To configure the type of the channel, one may
+// pass Cap as the argument of this function.
+//
+// By default, or without specification, the function returns an unbounded
+// channel which has unlimited capacity.
+//
+// 	ch := chann.New[float64]()
+// 	// or
+//  ch := chann.New[float64](chann.Cap(-1))
+//
+// If the chann.Cap specified a non-negative integer, the returned channel
+// is either unbuffered (0) or buffered (positive).
+//
+// Note that although the input arguments are  specified as variadic parameter
+// list, however, the function panics if there is more than one option is
+// provided.
+func New[T any](opts ...Opt) *Chann[T] { ... }
+
+
+// In returns the send channel of the given Chann, which can be used to
+// send values to the channel.
+func (ch *Chann[T]) In() chan<- T { ... }
+
+// Out returns the receive channel of the given Chann, which can be used
+// to receive values from the channel.
+func (ch *Chann[T]) Out() <-chan T { ... }
+
+// Close closesa the channel.
+func (ch *Chann[T]) Close() { close(ch.in) }
+```
+
+One may use these APIs to fit the previous discussed example:
+
+```diff
+func main() {
+-	draw := make(chan interface{})
++	draw := chann.New[*image.RGBA]()
+
+	...
+
+	// Rendering Thread
+	go func() {
+		...
+		for {
+			select {
+			case size := <-change:
+				...
+			default:
+-				draw <- p.Draw()
++				draw.In() <- p.Draw()
+			}
+		}
+	}()
+
+	// Event Thread
+	event := time.NewTicker(100 * time.Millisecond)
+	for {
+		select {
+-		case id := <-draw:
++		case id := <-draw.Out():
+			println(id)
+		case <-event.C:
+			...
+		}
+	}
+}
+```
+
+Lastly, we also made a contribution to the [fyne-io/fyne] GUI project to improve their draw call batching mechanism, where it previously can only
+render a fixed number of draw calls can be executed at a frame (more draw calls are ignored), which fixes one of their long-existing code.
+See [fyne-io/io#2406](https://github.com/fyne-io/fyne/pull/2406) for more details. Here are two videos to demonstrate the problem intuitively:
+
+| Before the fix | After the fix |
+|:--------------:|:-------------:|
+|<video width="320" controls><source src="https://user-images.githubusercontent.com/5498964/131047269-f1b89f9c-428a-4c3b-9e72-8855e0523ecd.mp4" type="video/mp4">Your browser does not support the video tag.</video>|<video width="320" controls><source src="https://user-images.githubusercontent.com/5498964/131047282-b48e7ab5-0dd7-445a-8cdf-9b00c7a525b4.mp4" type="video/mp4">Your browser does not support the video tag.</video>|
+
+Before the fix, the tiny blocks are only partially rendered; whereas all blocks can be rendered after the fix.
+
 ## Conclusion
 
 In this article, we talked about a generic implementation of a channel with arbitrary capacity through a real-world deadlock example. We might ask again: Is it perfect?
@@ -447,3 +538,4 @@ This scenario is neither discussed in the [language specification](https://golan
 - rgooch. proposal: spec: add support for unlimited capacity channels. 13 May 2017. https://golang.org/issue/20352
 - The Go Authors. The Go Programming Language Specification. Feb 10, 2021. https://golang.org/ref/spec
 - The Go Authors. The Go Memory Model. May 31, 2014. https://golang.org/ref/mem
+- Changkun Ou. Use unbounded channel for event processing #2406. Aug 27, 2021. https://github.com/fyne-io/fyne/pull/2406
