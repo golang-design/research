@@ -518,7 +518,7 @@ See [fyne-io/io#2406](https://github.com/fyne-io/fyne/pull/2406) for more detail
 
 | Before the fix | After the fix |
 |:--------------:|:-------------:|
-|<video width="320" controls><source src="https://user-images.githubusercontent.com/5498964/131047269-f1b89f9c-428a-4c3b-9e72-8855e0523ecd.mp4" type="video/mp4">Your browser does not support the video tag.</video>|<video width="320" controls><source src="https://user-images.githubusercontent.com/5498964/131047282-b48e7ab5-0dd7-445a-8cdf-9b00c7a525b4.mp4" type="video/mp4">Your browser does not support the video tag.</video>|
+|{{< rawhtml >}} <video width="320" autoplay controls><source src="https://user-images.githubusercontent.com/5498964/131047269-f1b89f9c-428a-4c3b-9e72-8855e0523ecd.mp4" type="video/mp4">Your browser does not support the video tag.</video>{{< /rawhtml >}}|{{< rawhtml >}} <video width="320" autoplay controls><source src="https://user-images.githubusercontent.com/5498964/131047282-b48e7ab5-0dd7-445a-8cdf-9b00c7a525b4.mp4" type="video/mp4">Your browser does not support the video tag.</video>{{< /rawhtml >}}|
 
 Before the fix, the tiny blocks are only partially rendered; whereas all blocks can be rendered after the fix.
 
