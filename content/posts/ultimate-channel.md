@@ -184,7 +184,7 @@ if `E` is too busy, and quickly exploits the entire buffer of the
 communication channel `change`, then the communication channel falls
 back to an unbuffered channel. Then `E` starts to wait to proceed;
 On the otherwise, `R` is busy working on the draw call, when it is
-finished, `R` tries to send the draw call to `E`. 
+finished, `R` tries to send the draw call to `E`.
 However, at this moment. the `E` is already waiting for `R` to receive
 the `change` signal. Hence, we will fall back to the same case -- deadlock.
 
@@ -231,7 +231,7 @@ In this case, if the `draw <- p.Draw()` is blocking, the newly introduced
 `select` statement will not block on the send and execute the default
 statement then resolves the deadlock.
 
-However, there are two drawbacks to this approach: 
+However, there are two drawbacks to this approach:
 
 1. If a draw call is skipped, there will be one frame loss of rendering. Because the next loop will start to calculate a new frame.
 2. The event thread remains blocked until a frame rendering in the rendering thread is complete. Because the new select statement can only be executed after all rendering calculation is complete.
@@ -249,6 +249,8 @@ constructed:
 ```go
 // MakeChan returns a sender and a receiver of a buffered channel
 // with infinite capacity.
+//
+// Warning: this implementation can be easily misuse, see discussion below
 func MakeChan() (chan<- interface{}, <-chan interface{}) {
 	in, out := make(chan interface{}), make(chan interface{})
 
@@ -284,7 +286,7 @@ func MakeChan() (chan<- interface{}, <-chan interface{}) {
 ```
 
 In the above implementation, we created two unbuffered channels. To not
-block the communication, a separate goroutine is created from the call. 
+block the communication, a separate goroutine is created from the call.
 Whenever there is a send operation, it appends to a buffer `q`. To send
 the value to the receiver, a nested select loop that checks whether send
 is possible or not. If not, it keeps appending the data to the queue `q`.
@@ -330,7 +332,7 @@ func main() {
 ```
 
 This unbounded channel is very similar to the commonly used standard
-graphics API pattern: CommandBuffer, a buffer that caches a series of
+graphics API pattern: `CommandBuffer`, a buffer that caches a series of
 draw calls, and does batch execution of a chunk of draw calls.
 
 ## A Generic Channel Abstraction
@@ -356,9 +358,10 @@ the statically typed Go code. Eventually, Ian Lance Taylor from the Go team
 an unbounded channel may have a sort of usage but is unworthy to be added
 to the language. As long as we have generics, a type-safe unbounded channel
 can be easily implemented in a library, answering the first question.
-
 As of Go 1.18, soon we have type parameters, the above difficulty finally
-can be resolved. Here I provide a generic channel abstraction that is able
+can be resolved.
+
+Here I provide a generic channel abstraction that is able
 to construct a type-safe, arbitrary sized channel:
 
 ```go
@@ -370,6 +373,8 @@ to construct a type-safe, arbitrary sized channel:
 // If the given size is zero, the returned channel is an unbuffered channel.
 // If the given size is -1, the returned an unbounded channel contains an
 // internal buffer with infinite capacity.
+//
+// Warning: this implementation can be easily misuse, see discussion below
 func MakeChan[T any](size int) (chan<- T, <-chan T) {
 	switch {
 	case size == 0:
@@ -431,12 +436,95 @@ func main() {
 
 *_This code is executable on go2go playground:_ https://go2goplay.golang.org/p/krLWm7ZInnL
 
-## Real-world Use Cases
+## Design Concerns and Real-world Use Cases
 
-As always, we further made this generic abstraction avaliable as a package to use, and we call it [`chann`](https://golang.design/s/chann), and the API design wraps the above mentioned `MakeChan` function as follows:
+Lastly, we have to address several potential misuses in the current implementation. The previously demonstrated `MakeChan` indeed can return
+two channels, one as input and the other as output. However, from the
+caller side, it is not super clear about whether to write:
 
 ```go
+in, out := MakeChan[int](-1)
+```
+
+or:
+
+```go
+out, in := MakeChan[int](-1)
+```
+
+Moreover, **the internal buffer and goroutine may be leaked. Because this
+can happen if one closes the input channel, but forget to drain out the
+output buffer.** This means, there are several concerns we have to address:
+
+1. When the unbounded channel is closed, the internal goroutine for
+caching events must return, so that the internal output channel won't
+block on send operation forever so that a goroutine may leak;
+2. When the unbounded channel is closed, all elements can still be safely
+received from the output channel;
+3. To avoid misuse of `close()`, a runtime panic should be triggered when
+accidentally closing the input channel.
+
+As always, we addressed all these issues and further made a generic
+abstraction avaliable as a package to use, and we call it
+[`chann`](https://golang.design/s/chann).
+
+The API design wraps the above mentioned `MakeChan` function and the
+implementation also addresses the mentioned concerns to avoid potential
+misuses:
+
+```go
+// Package chann provides a unified representation of buffered,
+// unbuffered, and unbounded channels in Go.
+//
+// The package is compatible with existing buffered and unbuffered
+// channels. For example, in Go, to create a buffered or unbuffered
+// channel, one uses built-in function `make` to create a channel:
+//
+// 	ch := make(chan int)     // unbuffered channel
+// 	ch := make(chan int, 42) // or buffered channel
+//
+// However, all these channels have a finite capacity for caching, and
+// it is impossible to create a channel with unlimited capacity, namely,
+// an unbounded channel.
+//
+// This package provides the ability to create all possible types of
+// channels. To create an unbuffered or a buffered channel:
+//
+// 	ch := chann.New[int](chann.Cap(0))  // unbuffered channel
+// 	ch := chann.New[int](chann.Cap(42)) // or buffered channel
+//
+// More importantly, when the capacity of the channel is unspecified,
+// or provided as negative values, the created channel is an unbounded
+// channel:
+//
+// 	ch := chann.New[int]()               // unbounded channel
+// 	ch := chann.New[int](chann.Cap(-42)) // or unbounded channel
+//
+// Furthermore, all channels provides methods to send (In()),
+// receive (Out()), and close (Close()).
+//
+// Note that to close a channel, must use Close() method instead of the
+// language built-in method
+// Two additional methods: ApproxLen and Cap returns the current status
+// of the channel: an approximation of the current length of the channel,
+// as well as the current capacity of the channel.
+//
+// See https://golang.design/research/ultimate-channel to understand
+// the motivation of providing this package and the possible use cases
+// with this package.
 package chann // import "golang.design/x/chann"
+
+// Opt represents an option to configure the created channel.
+// The current possible option is Cap.
+type Opt func(*config)
+
+// Cap is the option to configure the capacity of a creating buffer.
+// if the provided number is 0, Cap configures the creating buffer to a
+// unbuffered channel; if the provided number is a positive integer, then
+// Cap configures the creating buffer to a buffered channel with the given
+// number of capacity  for caching. If n is a negative integer, then it
+// configures the creating channel to become an unbounded channel.
+func Cap(n int) Opt { ... }
 
 // Chann is a generic channel abstraction that can be either buffered,
 // unbuffered, or unbounded. To create a new channel, use New to allocate
@@ -464,15 +552,25 @@ func New[T any](opts ...Opt) *Chann[T] { ... }
 
 
 // In returns the send channel of the given Chann, which can be used to
-// send values to the channel.
+// send values to the channel. If one closes the channel using close(),
+// it will result in a runtime panic. Instead, use Close() method.
 func (ch *Chann[T]) In() chan<- T { ... }
 
 // Out returns the receive channel of the given Chann, which can be used
 // to receive values from the channel.
 func (ch *Chann[T]) Out() <-chan T { ... }
 
-// Close closesa the channel.
-func (ch *Chann[T]) Close() { close(ch.in) }
+// Close closes the channel gracefully.
+func (ch *Chann[T]) Close() { ... }
+
+// ApproxLen returns an approximation of the length of the channel.
+//
+// Note that in a concurrent scenario, the returned length of a channel
+// may never be accurate. Hence the function is named with an Approx prefix.
+func (ch *Chann[T]) ApproxLen() int
+
+// Cap returns the capacity of the channel.
+func (ch *Chann[T]) Cap() int
 ```
 
 One may use these APIs to fit the previous discussed example:
@@ -512,9 +610,13 @@ func main() {
 }
 ```
 
-Lastly, we also made a contribution to the [fyne-io/fyne] GUI project to improve their draw call batching mechanism, where it previously can only
-render a fixed number of draw calls can be executed at a frame (more draw calls are ignored), which fixes one of their long-existing code.
-See [fyne-io/io#2406](https://github.com/fyne-io/fyne/pull/2406) for more details. Here are two videos to demonstrate the problem intuitively:
+Lastly, we also made a few contribution to the [fyne-io/fyne] GUI project
+to improve their draw call batching mechanism, where it previously can only
+render a fixed number of draw calls can be executed at a frame (more draw
+calls are ignored), which fixes one of their long-existing code.
+See [fyne-io/fyne#2406](https://github.com/fyne-io/fyne/pull/2406),
+and [fyne-io/fyne#2473](https://github.com/fyne-io/fyne/pull/2473)
+for more details. Here are two videos to demonstrate the problem intuitively:
 
 | Before the fix | After the fix |
 |:--------------:|:-------------:|
@@ -522,14 +624,24 @@ See [fyne-io/io#2406](https://github.com/fyne-io/fyne/pull/2406) for more detail
 
 Before the fix, the tiny blocks are only partially rendered; whereas all blocks can be rendered after the fix.
 
+
 ## Conclusion
 
-In this article, we talked about a generic implementation of a channel with arbitrary capacity through a real-world deadlock example. We might ask again: Is it perfect?
+In this article, we talked about a generic implementation of a channel with arbitrary capacity through a real-world deadlock example. A public package [chann](https://golang.design/x/chann) is provided as a generic channel package.
 
-Well, the answer is non-trivial. As a generalization of channels, the other common operations should also be supported, such as `len()`, `cap()`, and `close()`.
-If we think carefully about the semantics of closing a channel, it is really just about closing the ability of input to that channel. Hence, implementing the `close()` functionality, it is simple and straightforward.
+```go
+import "golang.design/x/chann"
+```
 
-However, the `len()` is not a thread-safe operation for arrays, slices, and maps, but it becomes pretty clear that it has to be thread safe for channels, otherwise, there is no way to fetch channel length atomically. Nonetheless, does it really make sense to get the length of a channel? As we know that channel is typically used for synchronization purposes. If there is a `len(ch)` that happens concurrently with a send/receive operation, there is no guarantee what is the return of the `len()`. The length is outdated immediately as `len()` returns.
+We may still ask: Is the implementation perfect? Why there is no `len()` but only a `ApproxLen()`?
+Well, the answer is non-trivial. The `len()` is not a thread-safe operation
+for arrays, slices, and maps, but it becomes pretty clear that it has to be
+thread safe for channels, otherwise, there is no way to fetch channel length
+atomically. Nonetheless, does it really make sense to get the length of a channel?
+As we know that channel is typically used for synchronization purposes.
+If there is a `len(ch)` that happens concurrently with a send/receive
+operation, there is no guarantee what is the return of the `len()`.
+The length is outdated immediately as `len()` returns.
 This scenario is neither discussed in the [language specification](https://golang.org/ref/spec), or the [Go's memory model](https://golang.org/ref/mem). After all, Do we really need a `len()` operation for the ultimate channel abstraction? The answer speaks for itself.
 
 ## Further Reading Suggestions
@@ -538,4 +650,6 @@ This scenario is neither discussed in the [language specification](https://golan
 - rgooch. proposal: spec: add support for unlimited capacity channels. 13 May 2017. https://golang.org/issue/20352
 - The Go Authors. The Go Programming Language Specification. Feb 10, 2021. https://golang.org/ref/spec
 - The Go Authors. The Go Memory Model. May 31, 2014. https://golang.org/ref/mem
-- Changkun Ou. Use unbounded channel for event processing #2406. Aug 27, 2021. https://github.com/fyne-io/fyne/pull/2406
+- Changkun Ou. internal/dirver: use unbounded channel for event processing #2406. Aug 27, 2021. https://github.com/fyne-io/fyne/pull/2406
+- Changkun Ou. internal/driver: fix rendering freeze in mobile #2406. Sep 15, 2021. https://github.com/fyne-io/fyne/pull/2473
+- Changkun Ou. Package `chann`. Sep 10, 2021. https://golang.design/s/chann
