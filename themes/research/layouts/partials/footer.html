@@ -5,5 +5,7 @@
 	{{- range .Site.Menus.footer }}
 		| <a class="footer-link" href="{{ .URL }}"><b>{{ .Name }}</b></a>
 	{{- end }}
+	| PV/UV: <span id="urlstat-site-pv"><!-- info will be inserted --></span>/<span id="urlstat-site-uv"><!-- info will be inserted --></span>
 	</p>
 </footer>
+<script async src="//changkun.de/urlstat/client.js"></script>
