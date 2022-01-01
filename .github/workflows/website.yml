@@ -38,4 +38,4 @@ jobs:
         eval "$(ssh-agent -s)"
         ssh-add ~/.ssh/idkey
         ssh-keyscan -H $DOMAIN >> ~/.ssh/known_hosts
-        scp -r public/* $USER@$DOMAIN:$TARGET
+        rsync -va public/* $USER@$DOMAIN:$TARGET
