@@ -125,7 +125,7 @@ Atomic/n-100000/w/o-timer-8    432µs ± 0%
 What's interesting in the modified benchmark result is by testing target code with a higher cost,
 the difference between `with-timer` and `w/o-timer` gets much closer. For instance, in the last pair of output when `n=100000`, the measured atomic operation only has `(444µs-432µs)/100000 = 0.12 ns` difference, which is pretty much accurate other than when `n=1` the error is `(34.8ns-6.44ns)/1 = 28.36 ns`.
 
-So, how is this happening? There are two ways to trace the problem down to the bare bones.
+How is this happening? There are two ways to trace the problem down to the bare bones.
 
 <!--more-->
 
