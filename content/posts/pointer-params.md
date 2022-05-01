@@ -1,6 +1,5 @@
 ---
 date: 2020-11-05T09:14:53+01:00
-toc: true
 slug: /pointer-params
 tags:
   - Performance
@@ -9,14 +8,14 @@ tags:
 title: Pointers Might Not be Ideal as Arguments
 ---
 
-Author(s): [Changkun Ou](https://changkun.de)
+Author(s): [Changkun Ou](mailto:research[at]changkun.de)
 
 Permalink: https://golang.design/research/pointer-params
 
+<!--abstract-->
 We are aware that using pointers for passing parameters can avoid data copy,
 which will benefit the performance. Nevertheless, there are always some
 edge cases we might need concern.
-
 <!--more-->
 
 ## Introduction
@@ -78,7 +77,7 @@ func BenchmarkVec(b *testing.B) {
 }
 ```
 
-And run as follows: 
+And run as follows:
 
 ```sh
 $ perflock -governor 80% go test -v -run=none -bench=. -count=10 | tee new.txt
@@ -93,11 +92,11 @@ Vec/addv-16  0.25ns ± 2%
 Vec/addp-16  2.20ns ± 0%
 
 name         alloc/op
-Vec/addv-16   0.00B     
-Vec/addp-16   0.00B     
+Vec/addv-16   0.00B
+Vec/addp-16   0.00B
 
 name         allocs/op
-Vec/addv-16    0.00     
+Vec/addv-16    0.00
 Vec/addp-16    0.00
 ```
 
@@ -107,7 +106,7 @@ How is this happening?
 
 This is all because of compiler optimization, and mostly because of inlining.
 
-If we disable inline from the `addv` and `addp`:
+If we disable inline[^cheney2020inline] [^cheney2020inline2] from the `addv` and `addp`:
 
 ```go
 //go:noinline
@@ -161,7 +160,7 @@ to a direct manipulation:
 ```go
 v1 := vec{1, 2, 3, 4}
 v2 := vec{4, 5, 6, 7}
-v1.x, v1.y, v1.z, v1.w = v1.x+v2.x, v1.y+v2.y, v1.z+v2.z, v1.w+v2.w 
+v1.x, v1.y, v1.z, v1.w = v1.x+v2.x, v1.y+v2.y, v1.z+v2.z, v1.w+v2.w
 ```
 
 ## Addressing Modes
@@ -219,10 +218,9 @@ The dumped assumbly code is as follows:
 ```
 
 The `addv` implementation uses values from the previous stack frame and
-writes the result directly to the return; whereas `addp` needs MOVQ that
+writes the result directly to the return; whereas `addp` needs MOVQ[^man2020movsd] [^man2020addsd] [^man2020moveq] that
 copies the parameter to different registers (e.g., copy pointers to AX and CX),
-then write back when returning. Therefore, with inline disabled, the reason that `addv` 
-is slower than `addp` is caused by different memory access pattern.
+then write back when returning. Therefore, with inline disabled, the reason that `addv` is slower than `addp` is caused by different memory access pattern.
 
 ## Conclusion
 
@@ -430,11 +428,10 @@ or pass-by-pointer. If you are certain that your code won't produce any escape
 variables, and the size of your argument is smaller than 4*8 = 32 bytes,
 then you should go for pass-by-value; otherwise, you should keep using pointers.
 
-## Further Reading Suggestions
+## References
 
-- Changkun Ou. Conduct Reliable Benchmarking in Go. March 26, 2020. https://golang.design/s/gobench
-- Dave Cheney. Mid-stack inlining in Go. May 2, 2020. https://dave.cheney.net/2020/05/02/mid-stack-inlining-in-go
-- Dave Cheney. Inlining optimisations in Go. April 25, 2020. https://dave.cheney.net/2020/04/25/inlining-optimisations-in-go
-- MOVSD. Move or Merge Scalar Double-Precision Floating-Point Value. Last access: 2020-10-27. https://www.felixcloutier.com/x86/movsd
-- ADDSD. Add Scalar Double-Precision Floating-Point Values. Last access: 2020-10-27. https://www.felixcloutier.com/x86/addsd
-- MOVEQ. Move Quadword. Last access: 2020-10-27. https://www.felixcloutier.com/x86/movq
+[^cheney2020inline]: Dave Cheney. Mid-stack inlining in Go. May 2, 2020. https://dave.cheney.net/2020/05/02/mid-stack-inlining-in-go
+[^cheney2020inline2]: Dave Cheney. Inlining optimisations in Go. April 25, 2020. https://dave.cheney.net/2020/04/25/inlining-optimisations-in-go
+[^man2020movsd]: MOVSD. Move or Merge Scalar Double-Precision Floating-Point Value. Last access: 2020-10-27. https://www.felixcloutier.com/x86/movsd
+[^man2020addsd]: ADDSD. Add Scalar Double-Precision Floating-Point Values. Last access: 2020-10-27. https://www.felixcloutier.com/x86/addsd
+[^man2020moveq]: MOVEQ. Move Quadword. Last access: 2020-10-27. https://www.felixcloutier.com/x86/movq

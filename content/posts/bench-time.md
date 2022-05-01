@@ -1,6 +1,5 @@
 ---
 date: 2020-09-30T09:02:20+01:00
-toc: true
 slug: /bench-time
 tags:
   - Benchmark
@@ -9,14 +8,14 @@ tags:
 title: Eliminating A Source of Measurement Errors in Benchmarks
 ---
 
-Author(s): [Changkun Ou](https://changkun.de)
+Author(s): [Changkun Ou](mailto:research[at]changkun.de)
 
 Permalink: https://golang.design/research/bench-time
 
-About six months ago, I did a [presentation](https://golang.design/s/gobench)
-that talks about how to conduct a reliable benchmark in Go.
-Recently, I submitted an issue [#41641](https://golang.org/issue/41641) to the Go project, which is also a subtle issue that you might need to address in some cases.
-
+<!--abstract-->
+About six months ago, I did a presentation[^ou2020bench]
+that talks about how to conduct a reliable benchmark[^beyer2019reliable] in Go.
+Recently, I submitted an issue #41641[^ou2020timer] to the Go project, which is also a subtle issue that you might need to address in some cases.
 <!--more-->
 
 ## Introduction
@@ -182,7 +181,7 @@ func (b *B) StopTimer() {
 }
 ```
 
-As we know that `runtime.ReadMemStats` stops the world, and each call to it is very time-consuming. This is an known issue [#20875](https://golang.org/issue/20875) regarding `runtime.ReadMemStats` in benchmarking.
+As we know that `runtime.ReadMemStats` stops the world, and each call to it is very time-consuming. This is an known issue #20875[^snyder2020memstats] regarding `runtime.ReadMemStats` in benchmarking.
 
 Since we do not care about memory allocation at the moment, to avoid this issue, let's just hacking the source code by just comment out the call to `runtime.ReadMemStats`:
 
@@ -295,7 +294,7 @@ to the execution time of target code plus the overhead of calling `now()`:
 ![](../assets/bench-time/flow.png)
 
 Assume the target code consumes in `T` ns, and the overhead of `now()` is `t` ns.
-Now, let's run the target code `N` times. 
+Now, let's run the target code `N` times.
 The total measured time is `T*N+t`, then the average of a single iteration
 of the target code is `T+t/N`. Thus, the systematic measurement error becomes: `t/N`.
 Therefore with a higher `N`, you can get rid of the systematic error.
@@ -357,11 +356,11 @@ calibrate := func(d time.Duration, n int) time.Duration {
 fmt.Printf("%v ns/op\n", calibrate(r.T, r.N))
 ```
 
-As a take-away message, if you would like to write a micro-benchmark (whose runs in nanoseconds), and you have to interrupt the timer to clean up and reset some resources for some reason, then you must do a calibration on the measurement. If the Go's benchmark facility plans to fix #41641, then it is great; but if they don't, at least you are aware of this issue and know how to fix it now.
+As a take-away message, if you would like to write a micro-benchmark (whose runs in nanoseconds), and you have to interrupt the timer to clean up and reset some resources for some reason, then you must do a calibration on the measurement. If the Go's benchmark facility plans to fix #41641[^ou2020timer], then it is great; but if they don't, at least you are aware of this issue and know how to fix it now.
 
-## Further Reading Suggestions
+## References
 
-- Changkun Ou. Conduct Reliable Benchmarking in Go. March 26, 2020. https://golang.design/s/gobench
-- Changkun Ou. testing: inconsistent benchmark measurements when interrupts timer. Sep 26, 2020. https://golang.org/issue/41641
-- Josh Bleecher Snyder. testing: consider calling ReadMemStats less during benchmarking. Jul 1, 2017. https://golang.org/issue/20875
-- Beyer, D., Löwe, S. & Wendler, P. Reliable benchmarking: requirements and solutions. Int J Softw Tools Technol Transfer 21, 1–29 (2019). https://doi.org/10.1007/s10009-017-0469-y
+[^ou2020bench]: Changkun Ou. 2020. Conduct Reliable Benchmarking in Go. TalkGo Meetup. Virtual Event. March 26. https://golang.design/s/gobench
+[^ou2020timer]: Changkun Ou. 2020. testing: inconsistent benchmark measurements when interrupts timer. The Go Project Issue Tracker. Sep 26. https://go.dev/issue/41641
+[^snyder2020memstats]: Josh Bleecher Snyder. 2020. testing: consider calling ReadMemStats less during benchmarking. The Go Project Issue Tracker. Jul 1. https://go.dev/issue/20875
+[^beyer2019reliable]: Beyer, D., Löwe, S. \& Wendler, P. 2019. Reliable benchmarking: requirements and solutions. International Journal on Software Tools for Technology Transfer. Issue 21. https://doi.org/10.1007/s10009-017-0469-y

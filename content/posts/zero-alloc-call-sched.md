@@ -1,6 +1,5 @@
 ---
 date: 2021-01-26T13:11:00+01:00
-toc: true
 slug: /zero-alloc-call-sched
 tags:
   - Channel
@@ -13,10 +12,11 @@ tags:
 title: Scheduling Function Calls with Zero Allocation
 ---
 
-Author(s): [Changkun Ou](https://changkun.de)
+Author(s): [Changkun Ou](mailto:research[at]changkun.de)
 
 Permalink: https://golang.design/research/zero-alloc-call-sched
 
+<!--abstract-->
 GUI programming in Go is a little bit tricky. The infamous issue
 regarding interacting with legacy, GUI frameworks is that
 most graphics related APIs must be called from the main thread.
@@ -24,7 +24,6 @@ The issue violates the concurrent nature of Go: A goroutine maybe
 arbitrarily and randomly scheduled or rescheduled on different running
 threads, i.e., the same piece of code will be called from different
 threads over time, even without evolving the `go` keyword.
-
 <!--more-->
 
 ## Background
@@ -516,7 +515,7 @@ it becomes somewhat tricky.
 
 In Go, variables can be allocated from heap if:
 
-1. Using `make` and `new` keywords explicitly, or 
+1. Using `make` and `new` keywords explicitly, or
 2. Escape from the stack
 
 The second case is a little bit advance from the regular use of Go.
@@ -678,7 +677,7 @@ func acquireSudog() *sudog {
 ```
 
 Unfortunately, this is entirely outside the control of the userland.
-We are not able to optimize here anymore. 
+We are not able to optimize here anymore.
 Nevertheless, we have reached our goal for today, and this is the best
 of what we can do so far.
 
@@ -708,7 +707,7 @@ There are several points we can summarize:
 4. Sending information via a channel can cause allocation intrinsically from the runtime.
 5. Go runtime grows the heap 8K on each step as page allocation
 
-We also encapsulated all the abstractions from this research and published two packages: `mainthread`[^mainthread] and `thread`[^thread]. These packages allow us to schedule any function calls either on the main thread or a specific thread. Furthermore, We also submitted a pull request to the Fyne project [^fyne], which could reduce a considerable amount of memory allocations from the existing real-world GUI applications.
+We also encapsulated all the abstractions from this research and published two packages: `mainthread`[^mainthread] and `thread`[^thread]. These packages allow us to schedule any function calls either on the main thread or a specific thread. Furthermore, We also submitted a pull request to the Fyne project[^fyne], which could reduce a considerable amount of memory allocations from the existing real-world GUI applications.
 
 Have fun!
 

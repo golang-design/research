@@ -1,6 +1,5 @@
 ---
 date: 2021-08-09T09:02:42+02:00
-toc: true
 slug: /ultimate-channel
 tags:
   - Go
@@ -9,17 +8,17 @@ tags:
 title: The Ultimate Channel Abstraction
 ---
 
-Author(s): [Changkun Ou](https://changkun.de)
+Author(s): [Changkun Ou](mailto:research[at]changkun.de)
 
 Permalink: https://golang.design/research/ultimate-channel
 
+<!--abstract-->
 Recently, I have been rethinking the programming patterns regarding
 graphics applications, and already wrote a 3D graphics package in Go,
 called [polyred](https://poly.red).
 While I was designing the rendering pipeline APIs, a tricky deadlock
 struggled with me for a while and led to creating an unbounded channel
 as a workaround solution eventually.
-
 <!--more-->
 
 ## The problem
@@ -345,7 +344,7 @@ implementation constructs an `interface{}` typed channel.
 We may ask ourselves, does unbounded make sense to have in the Go language
 with this particular example? Does the Go team ever consider such usage?
 
-The answer to the second question is: Yes. They do, see [golang/go#20352](https://golang.org/issue/20352).
+The answer to the second question is: Yes. They do, see golang/go#20352 [^rgoch2017unbound].
 The discussion thread shows that unbounded channels indeed serve a
 certain application, but clear drawbacks may hurt the application.
 The major drawback is that an unbounded channel may run out of memory (OOM).
@@ -358,7 +357,7 @@ the statically typed Go code. Eventually, Ian Lance Taylor from the Go team
 an unbounded channel may have a sort of usage but is unworthy to be added
 to the language. As long as we have generics, a type-safe unbounded channel
 can be easily implemented in a library, answering the first question.
-As of Go 1.18, soon we have type parameters, the above difficulty finally
+As of Go 1.18, soon we have type parameters[^taylor2021typeparam], the above difficulty finally
 can be resolved.
 
 Here I provide a generic channel abstraction that is able
@@ -614,8 +613,8 @@ Lastly, we also made a few contribution to the [fyne-io/fyne] GUI project
 to improve their draw call batching mechanism, where it previously can only
 render a fixed number of draw calls can be executed at a frame (more draw
 calls are ignored), which fixes one of their long-existing code.
-See [fyne-io/fyne#2406](https://github.com/fyne-io/fyne/pull/2406),
-and [fyne-io/fyne#2473](https://github.com/fyne-io/fyne/pull/2473)
+See fyne-io/fyne#2406[^ou2021unbound],
+and fyne-io/fyne#2473[^ou2021glfix]
 for more details. Here are two videos to demonstrate the problem intuitively:
 
 | Before the fix | After the fix |
@@ -627,7 +626,7 @@ Before the fix, the tiny blocks are only partially rendered; whereas all blocks 
 
 ## Conclusion
 
-In this article, we talked about a generic implementation of a channel with arbitrary capacity through a real-world deadlock example. A public package [chann](https://golang.design/x/chann) is provided as a generic channel package.
+In this article, we talked about a generic implementation of a channel with arbitrary capacity through a real-world deadlock example. A public package chann[^ou2021chann] is provided as a generic channel package.
 
 ```go
 import "golang.design/x/chann"
@@ -642,14 +641,14 @@ As we know that channel is typically used for synchronization purposes.
 If there is a `len(ch)` that happens concurrently with a send/receive
 operation, there is no guarantee what is the return of the `len()`.
 The length is outdated immediately as `len()` returns.
-This scenario is neither discussed in the [language specification](https://golang.org/ref/spec), or the [Go's memory model](https://golang.org/ref/mem). After all, Do we really need a `len()` operation for the ultimate channel abstraction? The answer speaks for itself.
+This scenario is neither discussed in the language specification[^go2021spec], or the Go's memory model[^go2014mem]. After all, Do we really need a `len()` operation for the ultimate channel abstraction? The answer speaks for itself.
 
-## Further Reading Suggestions
+## References
 
-- Ian Lance Taylor. Type Parameters. March 19, 2021. https://golang.org/design/43651-type-parameters
-- rgooch. proposal: spec: add support for unlimited capacity channels. 13 May 2017. https://golang.org/issue/20352
-- The Go Authors. The Go Programming Language Specification. Feb 10, 2021. https://golang.org/ref/spec
-- The Go Authors. The Go Memory Model. May 31, 2014. https://golang.org/ref/mem
-- Changkun Ou. internal/dirver: use unbounded channel for event processing #2406. Aug 27, 2021. https://github.com/fyne-io/fyne/pull/2406
-- Changkun Ou. internal/driver: fix rendering freeze in mobile #2406. Sep 15, 2021. https://github.com/fyne-io/fyne/pull/2473
-- Changkun Ou. Package `chann`. Sep 10, 2021. https://golang.design/s/chann
+[^taylor2021typeparam]: Ian Lance Taylor. Type Parameters. March 19, 2021. https://golang.org/design/43651-type-parameters
+[^rgoch2017unbound]: rgooch. proposal: spec: add support for unlimited capacity channels. 13 May 2017. https://golang.org/issue/20352
+[^go2021spec]: The Go Authors. The Go Programming Language Specification. Feb 10, 2021. https://golang.org/ref/spec
+[^go2014mem]: The Go Authors. The Go Memory Model. May 31, 2014. https://golang.org/ref/mem
+[^ou2021unbound]: Changkun Ou. internal/dirver: use unbounded channel for event processing Issue 2406. Aug 27, 2021. https://github.com/fyne-io/fyne/pull/2406
+[^ou2021glfix]: Changkun Ou. internal/driver: fix rendering freeze in mobile Issue 2473. Sep 15, 2021. https://github.com/fyne-io/fyne/pull/2473
+[^ou2021chann]: Changkun Ou. Package chann. Sep 10, 2021. https://golang.design/s/chann

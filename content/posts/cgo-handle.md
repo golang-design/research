@@ -1,6 +1,5 @@
 ---
 date: 2021-06-10T19:24:41+02:00
-toc: true
 slug: /cgo-handle
 tags:
   - Go
@@ -11,17 +10,17 @@ tags:
 title: A Concurrent-safe Centralized Pointer Managing Facility
 ---
 
-Author: [Changkun Ou](https://changkun.de)
+Author(s): [Changkun Ou](mailto:research[at]changkun.de)
 
 Permalink: [https://golang.design/research/cgo-handle](https://golang.design/research/cgo-handle)
 
+<!--abstract-->
 In the Go 1.17 release, we contributed a new cgo facility [runtime/cgo.Handle](https://tip.golang.org/pkg/runtime/cgo/#Handle) in order to help future cgo applications better and easier to build concurrent-safe applications while passing pointers between Go and C. This article will guide us through the feature by asking what the feature offers to us, why we need such a facility, and how exactly we contributed to the implementation eventually.
-
 <!--more-->
 
 ## Starting from Cgo and X Window Clipboard
 
-Cgo is the de facto approach to interact with the C facility in Go. Nevertheless, how often do we need to interact with C in Go? The answer to the question depends on how much we work on the system level or  how often do we have to utilize a legacy C library, such as for image processing. Whenever a Go application needs to use a legacy from C, it needs to import a sort of C dedicated package as follows, then on the Go side, one can simply call the `myprint` function through the imported `C` symbol:
+Cgo[^go2019cgo] is the de facto approach to interact with the C facility in Go. Nevertheless, how often do we need to interact with C in Go? The answer to the question depends on how much we work on the system level or  how often do we have to utilize a legacy C library, such as for image processing. Whenever a Go application needs to use a legacy from C, it needs to import a sort of C dedicated package as follows, then on the Go side, one can simply call the `myprint` function through the imported `C` symbol:
 
 ```go
 /*
@@ -40,7 +39,7 @@ func main() {
 }
 ```
 
-A few months ago, while we were working on building a new package [`golang.design/x/clipboard`](https://golang.design/x/clipboard), a package that offers cross-platform clipboard access. We found out, there is a lacking of facility in Go, despite the variety of approaches in the wild, still suffering from soundness and performance issues.
+A few months ago, while we were working on building a new package [`golang.design/x/clipboard`](https://golang.design/x/clipboard)[^ou2021clipboard], a package that offers cross-platform clipboard access. We found out, there is a lacking of facility in Go, despite the variety of approaches in the wild, still suffering from soundness and performance issues.
 
 In the [`golang.design/x/clipboard`](https://golang.design/x/clipboard) package, we had to cooperate with cgo to access system level APIs (technically, it is an API from a legacy and widely used C system), but lacking the facility of knowing the execution progress on the C side. For instance, on the Go side, we have to call the C code in a goroutine, then do something else in parallel:
 
@@ -69,7 +68,7 @@ clipboard.Write("some information")
 We have to guarantee from its inside that when the function returns,
 the information should be available to be accessed by other applications.
 
-Back then, our first idea to deal with the problem was to pass a channel from Go to C, then send a value through the channel from C to Go. After a quick research, we realized that it is impossible because channels cannot be passed as a value between C and Go due to the [rules of passing pointers in Cgo](https://pkg.go.dev/cmd/cgo#hdr-Passing_pointers) (see a previous [proposal document](https://golang.org/design/12416-cgo-pointers)). Even there is a way to pass the entire channel value to the C, there will be no facility to send values through that channel on the C side because C does not have the language support of the `<-` operator.
+Back then, our first idea to deal with the problem was to pass a channel from Go to C, then send a value through the channel from C to Go. After a quick research, we realized that it is impossible because channels cannot be passed as a value between C and Go due to the [rules of passing pointers in Cgo](https://pkg.go.dev/cmd/cgo#hdr-Passing_pointers) (see a previous proposal document [^taylor2015cgorules] [^taylor2015cgorules2]). Even there is a way to pass the entire channel value to the C, there will be no facility to send values through that channel on the C side because C does not have the language support of the `<-` operator.
 
 The next idea was to pass a function callback, then get it called on the C side. The function's execution will use the desired channel to send a notification back to the waiting goroutine.
 
@@ -142,11 +141,11 @@ func() {
 }
 ```
 
-Note that the `funcCallback` must be a global function variable. Otherwise, it is a violation of the [cgo pointer passing rules](https://pkg.go.dev/cmd/cgo/#hdr-Passing_pointers) as mentioned before. 
+Note that the `funcCallback` must be a global function variable. Otherwise, it is a violation of the [cgo pointer passing rules](https://pkg.go.dev/cmd/cgo/#hdr-Passing_pointers) as mentioned before.
 
 Furthermore, an immediate reaction to the readability of the above code is: too complicated. The demonstrated approach can only assign one function at a time, which is also a violation of the concurrent nature. Any per-goroutine dedicated application will not benefit from this approach because they need a per-goroutine function callback instead of a single global callback. By then, we wonder if there is a better and elegant approach to deal with it.
 
-Through our research, we found that the need occurs quite often in the community, and is also being proposed in [golang/go#37033](https://golang.org/issue/37033). Luckily, such a facility is now ready in Go 1.17 :)
+Through our research, we found that the need occurs quite often in the community, and is also being proposed in golang/go#37033[^dubov2020cgohandle]. Luckily, such a facility is now ready in Go 1.17 :)
 
 ## What is `runtime/cgo.Handle`?
 
@@ -268,7 +267,7 @@ Next question: How to implement `cgo.Handle`?
 
 ## First Attempt
 
-The first attempt was a lot complicated. Since we need a centralized way to manage all pointers in a concurrent-safe way, the quickest idea that comes to our mind was the `sync.Map` that maps a unique number to the desired value. Hence, we can easily use a global `sync.Map`:
+The first attempt[^ou2021cgohandle] was a lot complicated. Since we need a centralized way to manage all pointers in a concurrent-safe way, the quickest idea that comes to our mind was the `sync.Map` that maps a unique number to the desired value. Hence, we can easily use a global `sync.Map`:
 
 ```go
 package cgo
@@ -485,7 +484,7 @@ func (h Handle) Delete() {
 }
 ```
 
-In this implementation, we do not have to assume the runtime mechanism but just use the language. As long as the Go 1 compatibility keeps the promise `sync.Map` to work, there will be no need to rework the whole `Handle` design. Because of its simplicity, this is the accepted approach (see [CL 295369](https://golang.org/cl/295369)) by the Go team.
+In this implementation, we do not have to assume the runtime mechanism but just use the language. As long as the Go 1 compatibility keeps the promise `sync.Map` to work, there will be no need to rework the whole `Handle` design. Because of its simplicity, this is the accepted approach (see CL 295369[^out2020cgohandle2]) by the Go team.
 
 Aside from a future re-implementation of `sync.Map` that optimizes parallelism, the `Handle` will automatically benefit from it. Let us do a final benchmark that compares the previous method and the current approach:
 
@@ -521,14 +520,14 @@ Simpler, faster, why not?
 
 ## Conclusion
 
-This article discussed the newly introduced `runtime/cgo.Handle` facility coming in the Go 1.17 release that we contributed. The `Handle` facility enables us to pass Go values between Go and C back and forth without breaking the cgo pointer passing rules. After a short introduction to the usage of the feature, we first discussed a first attempt implementation based on the fact that the runtime garbage collector is not a moving GC and the escape behavior of `interface{}` arguments. 
+This article discussed the newly introduced `runtime/cgo.Handle` facility coming in the Go 1.17 release that we contributed. The `Handle` facility enables us to pass Go values between Go and C back and forth without breaking the cgo pointer passing rules. After a short introduction to the usage of the feature, we first discussed a first attempt implementation based on the fact that the runtime garbage collector is not a moving GC and the escape behavior of `interface{}` arguments.
 After a few discussions of the ambiguity of the Handle semantics and the drawbacks in the previous implementation, we also introduced a straightforward and better-performed approach and demonstrated its performance.
 
 As a real-world demonstration, we have been using the mentioned two approaches
 in two of our released packages for quite a long time:
 [golang.design/x/clipboard](https://github.com/golang-design/clipboard)
-and [golang.design/x/hotkey](https://github.com/golang-design/hotkey)
-before in their `internal/cgo` package. 
+and [golang.design/x/hotkey](https://github.com/golang-design/hotkey) [^ou2021hotkey]
+before in their `internal/cgo` package.
 We are looking forward to switching to the officially released `runtime/cgo`
 package in the Go 1.17 release.
 
@@ -543,14 +542,13 @@ When we allocate 100 handles per second, the handle space can run out in
 [CC us](mailto:hi[at]golang.design) when you send a CL,
 it would also be interesting for us to read your excellent approach._
 
+## References
 
-## Further Reading Suggestions
-
-- Alex Dubov. runtime: provide centralized facility for managing (c)go pointer handles. Feb 5, 2020. https://golang.org/issue/37033
-- Changkun Ou. runtime/cgo: add Handle for managing (c)go pointers Feb 21, 2021. https://golang.org/cl/294670
-- Changkun Ou. runtime/cgo: add Handle for managing (c)go pointers Feb 23, 2021. https://golang.org/cl/295369
-- Ian Lance Taylor. cmd/cgo: specify rules for passing pointers between Go and C. Aug 31, 2015. https://golang.org/issue/12416
-- Ian Lance Taylor. Proposal: Rules for passing pointers between Go and C. October, 2015. https://golang.org/design/12416-cgo-pointers
-- Go Contributors. cgo. Mar 12, 2019. https://github.com/golang/go/wiki/cgo
-- The golang.design Initiative. 📋 cross-platform clipboard package in Go. Feb 25, 2021. https://github.com/golang-design/clipboard
-- The golang.design Initiative. ⌨️ cross-platform hotkey package in GO. Feb 27, 2021. https://github.com/golang-design/hotkey
+[^dubov2020cgohandle]: Alex Dubov. 2020. runtime: provide centralized facility for managing (c)go pointer handles. The Go Project Issue Tracker. Feb 5. https://go.dev/issue/37033
+[^ou2021cgohandle]: Changkun Ou. 2021. runtime/cgo: add Handle for managing (c)go pointers. The Go Project CL Tracker. Feb 21, 2021. https://go.dev/cl/294670
+[^out2020cgohandle2]: Changkun Ou. 2021. runtime/cgo: add Handle for managing (c)go pointers. The Go Project CL Tracker. Feb 23, 2021. https://go.dev/cl/295369
+[^taylor2015cgorules]: Ian Lance Taylor. 2015. cmd/cgo: specify rules for passing pointers between Go and C. The Go Project Issue Tracker. Aug 31. https://go.dev/issue/12416
+[^taylor2015cgorules2]: Ian Lance Taylor. 2015. Proposal: Rules for passing pointers between Go and C. The Go project design proposals. https://golang.org/design/12416-cgo-pointers
+[^go2019cgo]: Go Contributors. cgo. Mar 12, 2019. https://github.com/golang/go/wiki/cgo
+[^ou2021clipboard]: Changkun Ou. 2021. cross-platform clipboard package. The golang.design Initiative. Feb 25. https://github.com/golang-design/clipboard
+[^ou2021hotkey]: Changkun Ou. 2021. cross-platform hotkey package. The golang.design Initiative. Feb 27. https://github.com/golang-design/hotkey

@@ -1,6 +1,5 @@
 ---
 date: 2022-04-11T00:27:43+02:00
-toc: true
 slug: /generic-option
 tags:
   - Go
@@ -9,19 +8,19 @@ tags:
 title: (Generic) Functional Options Pattern
 ---
 
-Author(s): [Changkun Ou](https://changkun.de)
+Targeted Go version: 1.18
+
+Author(s): [Changkun Ou](mailto:research[at]changkun.de)
 
 Permalink: https://golang.design/research/generic-option
 
-Targeted Go version: 1.18
-
-The widely used self-referential function pattern as options, [originally proposed by Rob Pike](https://commandcenter.blogspot.com/2014/01/self-referential-functions-and-design.html), allows us to design a flexible set of APIs to help arbitrary configurations and initialization of a struct. However, when such a pattern is cumbersome when we use one option to support multiple types. This article investigates how the latest Go generics design could empower a refreshed "generic" functional options pattern and show what improvements in the future version of Go could better support such a pattern.
-
+<!--abstract-->
+The widely used self-referential function pattern as options, originally proposed by Rob Pike[^pike2014funcopt], allows us to design a flexible set of APIs to help arbitrary configurations and initialization of a struct. However, when such a pattern is cumbersome when we use one option to support multiple types. This article investigates how the latest Go generics design could empower a refreshed "generic" functional options pattern and show what improvements in the future version of Go could better support such a pattern.
 <!--more-->
 
 ## The Functional Options Pattern
 
-In the [dotGo](https://www.dotgo.eu/) 2014, [Dave Cheney](https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis) well explained the motivation and the use of  self-referential functional options pattern in addition to the original thoughts from Rob Pike. Let's recall the key idea briefly.
+In the [dotGo](https://www.dotgo.eu/) 2014, Dave Cheney[^cheney2014funcopt] well explained the motivation and the use of  self-referential functional options pattern in addition to the original thoughts from Rob Pike. Let's recall the key idea briefly.
 
 Assume we have a struct `A` and it internally holds two user-customizable fields `v1`, `v2`:
 
@@ -447,10 +446,10 @@ pkgname.NewB(pkgname.V1(42), pkgname.V2(42))
 With this simplification, on the caller side, we see a sort of magic function V1 as an option,
 which can be used both for `NewA` and `NewB`. Unfortunately, with the current Go 1.18 generics implementation, this type of inference is not yet supported.
 
-We have created [an issue](https://go.dev/issue/52272) for the Go team and see if this type of optimization could be possible without introducing any other flaws. Let's looking forward to it!
+We have created an issue[^ou2022coretype] for the Go team and see if this type of optimization could be possible without introducing any other flaws. Let's looking forward to it!
 
-## Further Reading Suggestions
+## References
 
-- Rob Pike. Self-referential functions and the design of options. Jan 24, 2014. https://commandcenter.blogspot.com/2014/01/self-referential-functions-and-design.html
-- Dave Cheney. Functional options for friendly APIs. Oct 17, 2014. https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis
-- cmd/compile: infer argument types when a type set only represents its core type. https://go.dev/issue/52272
+[^pike2014funcopt]: Rob Pike. Self-referential functions and the design of options. Jan 24, 2014. https://commandcenter.blogspot.com/2014/01/self-referential-functions-and-design.html
+[^cheney2014funcopt]: Dave Cheney. Functional options for friendly APIs. Oct 17, 2014. https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis
+[^ou2022coretype]: Changkun Ou. 2022. cmd/compile: infer argument types when a type set only represents its core type. The Go Project Issue Tracker. April 11. https://go.dev/issue/52272

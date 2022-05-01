@@ -2,8 +2,9 @@
 	<main>
 		<article>
 			<h1 class="title">{{ .Title }}</h1>
-			<b><time>{{ .Date.Format (default "2006-01-02 15:04:05" .Site.Params.dateFmt) }}</time></b>
-			<span>PV/UV:<span id="urlstat-page-pv"></span>/<span id="urlstat-page-uv"></span></span>
+			<b><time>{{ .Date.Format (default "2006-01-02 15:04:05" .Site.Params.dateFmt) }}</time></b> |
+			<span>PV/UV:<span id="urlstat-page-pv"></span>/<span id="urlstat-page-uv"></span></span> |
+			<span><a href="/research{{.Page.Slug}}.pdf">PDF</a></span> |
 			{{ range .Params.tags }}
 			<a href="{{ "/tags/" | relLangURL }}{{ . | urlize }}">#{{ . }}</a>
 			{{ end }}
