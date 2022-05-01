@@ -46,7 +46,8 @@ func BenchmarkAtomic(b *testing.B) {
 On my target machine (CPU Quad-core Intel Core i7-7700 (-MT-MCP-) speed/max 1341/4200 MHz Kernel 5.4.0-42-generic x86_64), running this snippet with the following command:
 
 ```
-go test -run=none -bench=Atomic -benchtime=1000x -count=20 | tee b.txt && benchstat b.txt
+go test -run=none -bench=Atomic -benchtime=1000x -count=20 | \
+	tee b.txt && benchstat b.txt
 ```
 
 The result shows:
@@ -102,7 +103,8 @@ for j := 0; j < k; j++ {
 Thus with higher `k`, the target code grows more costly. With similar command:
 
 ```
-go test -run=none -bench=Atomic -benchtime=1000x -count=20 | tee b.txt && benchstat b.txt
+go test -run=none -bench=Atomic -benchtime=1000x -count=20 | \
+	tee b.txt && benchstat b.txt
 ```
 
 ```
@@ -146,7 +148,8 @@ func BenchmarkWithTimer(b *testing.B) {
 ```
 
 ```
-go test -v -run=none -bench=WithTimer -benchtime=100000x -count=5 -cpuprofile cpu.pprof
+go test -v -run=none -bench=WithTimer -benchtime=100000x -count=5 \
+	-cpuprofile cpu.pprof
 ```
 
 Sadly, the graph shows a chunk of useless information where most of the costs shows as `runtime.ReadMemStats`:
@@ -279,7 +282,8 @@ int main() {
     for (int j = 0; j < 10; j++) {
         std::chrono::nanoseconds since(0);
         for (int i = 0; i < n; i++) {
-            since -= std::chrono::steady_clock::now() - std::chrono::steady_clock::now();
+            since -= std::chrono::steady_clock::now() -
+                std::chrono::steady_clock::now();
         }
         std::cout << "avg since: " << since.count() / n << "ns \n";
     }

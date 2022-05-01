@@ -80,7 +80,8 @@ func BenchmarkVec(b *testing.B) {
 And run as follows:
 
 ```sh
-$ perflock -governor 80% go test -v -run=none -bench=. -count=10 | tee new.txt
+$ perflock -governor 80% go test -v -run=none -bench=. -count=10 | \
+	tee new.txt
 $ benchstat new.txt
 ```
 
@@ -124,7 +125,8 @@ func (v *vec) addp(u *vec) *vec {
 Then run the benchmark and compare the perf with the previous one:
 
 ```sh
-$ perflock -governor 80% go test -v -run=none -bench=. -count=10 | tee old.txt
+$ perflock -governor 80% go test -v -run=none -bench=. -count=10 | \
+	tee old.txt
 $ benchstat old.txt new.txt
 name         old time/op    new time/op    delta
 Vec/addv-16    4.99ns ± 1%    0.25ns ± 2%  -95.05%  (p=0.000 n=9+10)
@@ -176,8 +178,8 @@ The dumped assumbly code is as follows:
 ```
 "".vec.addv STEXT nosplit size=89 args=0x60 locals=0x0 funcid=0x0
 	0x0000 00000 (vec.go:7)	TEXT	"".vec.addv(SB), NOSPLIT|ABIInternal, $0-96
-	0x0000 00000 (vec.go:7)	FUNCDATA	$0, gclocals·33cdeccccebe80329f1fdbee7f5874cb(SB)
-	0x0000 00000 (vec.go:7)	FUNCDATA	$1, gclocals·33cdeccccebe80329f1fdbee7f5874cb(SB)
+	0x0000 00000 (vec.go:7)	FUNCDATA	$0, gclocals·...(SB)
+	0x0000 00000 (vec.go:7)	FUNCDATA	$1, gclocals·...(SB)
 	0x0000 00000 (vec.go:8)	MOVSD	"".u+40(SP), X0
 	0x0006 00006 (vec.go:8)	MOVSD	"".v+8(SP), X1
 	0x000c 00012 (vec.go:8)	ADDSD	X1, X0
@@ -197,8 +199,8 @@ The dumped assumbly code is as follows:
 	0x0058 00088 (vec.go:8)	RET
 "".(*vec).addp STEXT nosplit size=73 args=0x18 locals=0x0 funcid=0x0
 	0x0000 00000 (vec.go:11)	TEXT	"".(*vec).addp(SB), NOSPLIT|ABIInternal, $0-24
-	0x0000 00000 (vec.go:11)	FUNCDATA	$0, gclocals·522734ad228da40e2256ba19cf2bc72c(SB)
-	0x0000 00000 (vec.go:11)	FUNCDATA	$1, gclocals·69c1753bd5f81501d95132d08af04464(SB)
+	0x0000 00000 (vec.go:11)	FUNCDATA	$0, gclocals·...(SB)
+	0x0000 00000 (vec.go:11)	FUNCDATA	$1, gclocals·...(SB)
 	0x0000 00000 (vec.go:12)	MOVQ	"".u+16(SP), AX
 	0x0005 00005 (vec.go:12)	MOVSD	(AX), X0
 	0x0009 00009 (vec.go:12)	MOVQ	"".v+8(SP), CX
@@ -329,7 +331,8 @@ func main() {
 			Name:       fmt.Sprintf("s%d", i),
 			Properties: strings.Join(ps, "\n"),
 			Addv:       strings.Join(adv, "\n"),
-			Addp:       strings.Join(adpl, ",") + " = " + strings.Join(adpr, ","),
+			Addp:       strings.Join(adpl, ",") + " = " +
+				strings.Join(adpr, ","),
 		})
 		if err != nil {
 			panic(err)
@@ -363,7 +366,8 @@ v2 := s%d{%s}`, i, numstr1, i, numstr2),
 	if err != nil {
 		panic(err)
 	}
-	if err := ioutil.WriteFile("impl_test.go", out, 0660); err != nil {
+	err = ioutil.WriteFile("impl_test.go", out, 0660)
+	if err != nil {
 		panic(err)
 	}
 }
@@ -373,7 +377,8 @@ If we generate our test code and perform the same benchmark procedure again:
 
 ```bash
 $ go generate
-$ perflock -governor 80% go test -v -run=none -bench=. -count=10 | tee inline.txt
+$ perflock -governor 80% go test -v -run=none -bench=. -count=10 | \
+	tee inline.txt
 $ benchstat inline.txt
 name            time/op
 Vec/addv-s0-16  0.25ns ± 0%

@@ -90,16 +90,17 @@ func (p *RenderProfile) Draw() interface{} {
 func main() {
 	// draw is a channel for receiving finished draw calls.
 	draw := make(chan interface{})
-	// change is a channel to receive notification of the change of rendering settings.
+	// change is a channel to receive notification of the change
+	// of rendering settings.
 	change := make(chan ResizeEvent)
 
 	// Rendering Thread
 	//
-	// Sending draw calls to the event thread in order to draw pictures.
-	// The thread sends darw calls to the draw channel, using the same
-	// rendering setting id. If there is a change of rendering setting,
-	// the event thread notifies the rendering setting change, and here
-	// increases the rendering setting id.
+	// Sending draw calls to the event thread in order to draw
+	// pictures. The thread sends darw calls to the draw channel,
+	// using the same rendering setting id. If there is a change
+	// of rendering setting, the event thread notifies the rendering
+	// setting change, and here increases the rendering setting id.
 	go func() {
 		p := &RenderProfile{id: 0, width: 800, height: 500}
 		for {
@@ -117,17 +118,17 @@ func main() {
 
 	// Event Thread
 	//
-	// Process events every 100 ms. Otherwise, process drawcall request
-	// upon-avaliable.
+	// Process events every 100 ms. Otherwise, process drawcall
+	// request upon-avaliable.
 	event := time.NewTicker(100 * time.Millisecond)
 	for {
 		select {
 		case id := <-draw:
 			println(id)
 		case <-event.C:
-			// Notify the rendering thread there is a change regarding
-			// rendering settings. We simulate a random size at every
-			// event processing loop.
+			// Notify the rendering thread there is a change
+			// regarding rendering settings. We simulate a
+			// random size at every event processing loop.
 			change <- ResizeEvent{
 				width:  int(rand.Float64() * 100),
 				height: int(rand.Float64() * 100),
@@ -249,7 +250,8 @@ constructed:
 // MakeChan returns a sender and a receiver of a buffered channel
 // with infinite capacity.
 //
-// Warning: this implementation can be easily misuse, see discussion below
+// Warning: this implementation can be easily misuse,
+// see discussion below
 func MakeChan() (chan<- interface{}, <-chan interface{}) {
 	in, out := make(chan interface{}), make(chan interface{})
 
@@ -369,11 +371,13 @@ to construct a type-safe, arbitrary sized channel:
 //
 // If the given size is positive, the returned channel is a regular
 // fix-sized buffered channel.
-// If the given size is zero, the returned channel is an unbuffered channel.
-// If the given size is -1, the returned an unbounded channel contains an
-// internal buffer with infinite capacity.
+// If the given size is zero, the returned channel is an unbuffered
+// channel.
+// If the given size is -1, the returned an unbounded channel
+// contains an internal buffer with infinite capacity.
 //
-// Warning: this implementation can be easily misuse, see discussion below
+// Warning: this implementation can be easily misuse,
+// see discussion below
 func MakeChan[T any](size int) (chan<- T, <-chan T) {
 	switch {
 	case size == 0:
@@ -433,7 +437,7 @@ func main() {
 }
 ```
 
-*_This code is executable on go2go playground:_ https://go2goplay.golang.org/p/krLWm7ZInnL
+*_This code is executable on go2go playground:_ https://go.dev/play/p/krLWm7ZInnL
 
 ## Design Concerns and Real-world Use Cases
 

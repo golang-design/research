@@ -81,8 +81,9 @@ int myfunc(void* go_value);
 */
 import "C"
 
-// This funcCallback tries to avoid a runtime panic error when directly
-// pass it to Cgo because it violates the pointer passing rules:
+// This funcCallback tries to avoid a runtime panic error when
+// directly pass it to Cgo because it violates the pointer passing
+// rules:
 //
 //   panic: runtime error: cgo argument has Go pointer to Go pointer
 var (
@@ -109,12 +110,12 @@ func main() {
 In above, the `gocallback` pointer on the Go side is passed through the  C function `myfunc`. On the C side, there will be a call using `go_func_callback` that being called on the C, via passing the struct `gocallback` as a parameter:
 
 ```c
-// myfunc will trigger a callback, c_func, whenever it is needed and pass
-// the gocallback data though the void* parameter.
+// myfunc will trigger a callback, c_func, whenever it is needed
+// and pass the gocallback data though the void* parameter.
 void c_func(void *data) {
 	void *gocallback = userData;
-	// the gocallback is received as a pointer, we pass it as an argument
-	// to the go_func_callback
+	// the gocallback is received as a pointer, we pass it as
+	// an argument to the go_func_callback
 	go_func_callback(gocallback);
 }
 ```
@@ -158,13 +159,13 @@ type Handle uintptr
 
 // NewHandle returns a handle for a given value.
 //
-// The handle is valid until the program calls Delete on it. The handle
-// uses resources, and this package assumes that C code may hold on to
-// the handle, so a program must explicitly call Delete when the handle
-// is no longer needed.
+// The handle is valid until the program calls Delete on it.
+// The handle uses resources, and this package assumes that C
+// code may hold on to the handle, so a program must explicitly
+// call Delete when the handle is no longer needed.
 //
-// The intended use is to pass the returned handle to C code, which
-// passes it back to Go, which calls Value.
+// The intended use is to pass the returned handle to C code,
+// which passes it back to Go, which calls Value.
 func NewHandle(v interface{}) Handle
 
 // Value returns the associated Go value for a valid handle.
@@ -172,9 +173,9 @@ func NewHandle(v interface{}) Handle
 // The method panics if the handle is invalid.
 func (h Handle) Value() interface{}
 
-// Delete invalidates a handle. This method should only be called once
-// the program no longer needs to pass the handle to C and the C code
-// no longer has a copy of the handle value.
+// Delete invalidates a handle. This method should only be
+// called once the program no longer needs to pass the handle
+// to C and the C code no longer has a copy of the handle value.
 //
 // The method panics if the handle is invalid.
 func (h Handle) Delete()
@@ -245,7 +246,8 @@ func main() {
 	ch := make(chan struct{})
 	handle := cgo.NewHandle(ch)
 	go func() {
-		C.myfunc(C.uintptr_t(handle)) // myfunc will call goCallback when needed.
+		// myfunc will call goCallback when needed.
+		C.myfunc(C.uintptr_t(handle))
 		...
 	}()
 
@@ -312,10 +314,10 @@ func NewHandle(v interface{}) Handle {
 
 		k = rv.Pointer()
 	default:
-		// Wrap and turn a value parameter into a pointer. This enables
-		// us to always store the passing object as a pointer, and helps
-		// to identify which of whose are initially pointers or values
-		// when Value is called.
+		// Wrap and turn a value parameter into a pointer.
+		// This enables us to always store the passing object
+		// as a pointer, and helps to identify which of whose
+		// are initially pointers or values when Value is called.
 		v = &wrap{v}
 		k = reflect.ValueOf(v).Pointer()
 	}
@@ -327,10 +329,10 @@ func NewHandle(v interface{}) Handle {
 Note that the implementation above treats the values differently: For `reflect.Ptr`, `reflect.UnsafePointer`, `reflect.Slice`, `reflect.Map`, `reflect.Chan`, `reflect.Func` types, they are already pointers escaped to the heap, we can safely get the address from them. For the other kinds, we need to turn them from a value to a pointer and also make sure they will always escape to the heap. That is the part:
 
 ```go
-		// Wrap and turn a value parameter into a pointer. This enables
-		// us to always store the passing object as a pointer, and helps
-		// to identify which of whose are initially pointers or values
-		// when Value is called.
+		// Wrap and turn a value parameter into a pointer. This
+		// enables us to always store the passing object as a
+		// pointer, and helps to identify which of whose are
+		// initially pointers or values when Value is called.
 		v = &wrap{v}
 		k = reflect.ValueOf(v).Pointer()
 ```
@@ -344,11 +346,12 @@ The easy case is, of course, if the address is not on the global map, then we do
 func NewHandle(v interface{}) Handle {
 	...
 
-	// v was escaped to the heap because of reflection. As Go do not have
-	// a moving GC (and possibly lasts true for a long future), it is
-	// safe to use its pointer address as the key of the global map at
-	// this moment. The implementation must be reconsidered if moving GC
-	// is introduced internally in the runtime.
+	// v was escaped to the heap because of reflection. As Go do
+	// not have a moving GC (and possibly lasts true for a long
+	// future), it is safe to use its pointer address as the key
+	// of the global map at this moment. The implementation must
+	// be reconsidered if moving GC is introduced internally in
+	// the runtime.
 	actual, loaded := m.LoadOrStore(k, v)
 	if !loaded {
 	    return Handle(k)
@@ -374,12 +377,13 @@ func NewHandle(v interface{}) Handle {
 			return Handle(k)
 		}
 
-		// If the loaded pointer is inconsistent with the new pointer,
-		// it means the address has been used for different objects
-		// because of GC and its address is reused for a new Go object,
-		// meaning that the Handle does not call Delete explicitly when
-		// the old Go value is not needed. Consider this as a misuse of
-		// a handle, do panic.
+		// If the loaded pointer is inconsistent with the new
+		// pointer, it means the address has been used for
+		// different objects because of GC and its address is
+		// reused for a new Go object, meaning that the Handle
+		// does not call Delete explicitly when the old Go value
+		// is not needed. Consider this as a misuse of a handle,
+		// do panic.
 		panic("cgo: misuse of a Handle")
 	default:
 		panic("cgo: Handle implementation has an internal bug")

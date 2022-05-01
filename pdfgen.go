@@ -40,7 +40,7 @@ func init() {
 func usage() {
 	fmt.Fprintf(os.Stderr, `pdfgen converts a golang.design research markdown file to a pdf.
 
-usage: pdfgen content/posts/bench-time.md
+usage: pdfgen bench-time.md
 `)
 }
 
@@ -104,14 +104,14 @@ func main() {
 
 	// Prepare all content.
 
-	ref := "content/posts/ref.tex"
+	ref := "ref.tex"
 	references := parseReferences(b)
 	if err := os.WriteFile(ref, []byte(references), os.ModePerm); err != nil {
 		log.Fatalf("pdfgen: cannot create reference file: %v", err)
 	}
 	defer os.Remove(ref)
 
-	article := "content/posts/article.md"
+	article := "article.md"
 	if err := os.WriteFile(article, []byte(content), os.ModePerm); err != nil {
 		log.Fatalf("pdfgen: cannot create temporary file: %v", err)
 	}
@@ -119,8 +119,7 @@ func main() {
 
 	// Generate pdf
 
-	before, after, _ := strings.Cut(strings.TrimSuffix(path, ".md")+".pdf", "/posts")
-	dst := before + after
+	dst := "../" + strings.TrimSuffix(path, ".md") + ".pdf"
 	cmd := exec.Command("pandoc", article, ref,
 		"-V", "linkcolor:blue",
 		"--pdf-engine=xelatex",

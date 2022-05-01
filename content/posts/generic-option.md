@@ -79,10 +79,10 @@ func NewA(opts ...Option) *A {
 For example, the following four different usages both work:
 
 ```go
-fmt.Printf("%#v\n", NewA())               // &main.A{v1:0, v2:0}
-fmt.Printf("%#v\n", NewA(V1(42)))         // &main.A{v1:42, v2:0}
-fmt.Printf("%#v\n", NewA(V2(42)))         // &main.A{v1:0, v2:0}
-fmt.Printf("%#v\n", NewA(V1(42), V2(42))) // &main.A{v1:42, v2:0}
+fmt.Printf("%#v\n", NewA())               // &A{v1:0, v2:0}
+fmt.Printf("%#v\n", NewA(V1(42)))         // &A{v1:42, v2:0}
+fmt.Printf("%#v\n", NewA(V2(42)))         // &A{v1:0, v2:0}
+fmt.Printf("%#v\n", NewA(V1(42), V2(42))) // &A{v1:42, v2:0}
 ```
 
 This is also super easy to deprecate an option, because we can simply let
@@ -189,12 +189,12 @@ func NewB(opts ...OptionB) *B {
 In this way, whenever we need create a new `A` or `B`, we could:
 
 ```go
-fmt.Printf("%#v\n", NewA())                       // &main.A{v1:0}
-fmt.Printf("%#v\n", NewA(V1ForA(42)))             // &main.A{v1:42}
-fmt.Printf("%#v\n", NewB())                       // &main.B{v1:0, v2:0}
-fmt.Printf("%#v\n", NewB(V1ForB(42)))             // &main.B{v1:42, v2:0}
-fmt.Printf("%#v\n", NewB(V2ForB(42)))             // &main.B{v1:0, v2:42}
-fmt.Printf("%#v\n", NewB(V1ForB(42), V2ForB(42))) // &main.B{v1:42, v2:42}
+fmt.Printf("%#v\n", NewA())                       // &A{v1:0}
+fmt.Printf("%#v\n", NewA(V1ForA(42)))             // &A{v1:42}
+fmt.Printf("%#v\n", NewB())                       // &B{v1:0, v2:0}
+fmt.Printf("%#v\n", NewB(V1ForB(42)))             // &B{v1:42, v2:0}
+fmt.Printf("%#v\n", NewB(V2ForB(42)))             // &B{v1:0, v2:42}
+fmt.Printf("%#v\n", NewB(V1ForB(42), V2ForB(42))) // &B{v1:42, v2:42}
 ```
 
 Although the above workaround is possible, but the actual naming and usage
@@ -283,12 +283,12 @@ func NewB(opts ...Option) *B {
 Without further changes, one can use `V1` both for `A` and `B`, which is a quite simplification from the previous use already:
 
 ```go
-fmt.Printf("%#v\n", NewA())               // &main.A{v1:0}
-fmt.Printf("%#v\n", NewA(V1(42)))         // &main.A{v1:42}
-fmt.Printf("%#v\n", NewB())               // &main.B{v1:0, v2:0}
-fmt.Printf("%#v\n", NewB(V1(42)))         // &main.B{v1:42, v2:0}
-fmt.Printf("%#v\n", NewB(V2(42)))         // &main.B{v1:0, v2:42}
-fmt.Printf("%#v\n", NewB(V1(42), V2(42))) // &main.B{v1:42, v2:42}
+fmt.Printf("%#v\n", NewA())               // &A{v1:0}
+fmt.Printf("%#v\n", NewA(V1(42)))         // &A{v1:42}
+fmt.Printf("%#v\n", NewB())               // &B{v1:0, v2:0}
+fmt.Printf("%#v\n", NewB(V1(42)))         // &B{v1:42, v2:0}
+fmt.Printf("%#v\n", NewB(V2(42)))         // &B{v1:0, v2:42}
+fmt.Printf("%#v\n", NewB(V1(42), V2(42))) // &B{v1:42, v2:42}
 ```
 
 However, not everything goes as expected. There is a heavy cost for this type of functional options pattern: safety.
@@ -400,10 +400,16 @@ fmt.Printf("%#v\n", NewB(V1[B](42), V2[B](42))) // &main.B{v1:42, v2:42}
 With this design, the user of these APIs is safe because it is guaranteed by the compiler at compile-time, to disallow its misuse by the following errors:
 
 ```go
-_ = NewA(V2[B](42))            // ERROR: B does not implement A
-_ = NewA(V2[A](42))            // ERROR: A does not implement B
-_ = NewB(V1[A](42), V2[B](42)) // ERROR: type Option[B] of V2[B](42) does not match inferred type Option[A] for Option[T]
-_ = NewB(V1[B](42), V2[A](42)) // ERROR: type Option[A] of V2[A](42) does not match inferred type Option[B] for Option[T]
+// ERROR: B does not implement A
+_ = NewA(V2[B](42))
+// ERROR: A does not implement B
+_ = NewA(V2[A](42))
+// ERROR: type Option[B] of V2[B](42) does not match
+// inferred type Option[A] for Option[T]
+_ = NewB(V1[A](42), V2[B](42))
+// ERROR: type Option[A] of V2[A](42) does not match
+// inferred type Option[B] for Option[T]
+_ = NewB(V1[B](42), V2[A](42))
 ```
 
 ## Conclusion

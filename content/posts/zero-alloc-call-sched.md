@@ -71,7 +71,8 @@ Luckily, there is a method called `LockOSThread` offered from the
 `runtime` package, provides the same feature we want:
 
 ```go
-// LockOSThread wires the calling goroutine to its current operating system thread.
+// LockOSThread wires the calling goroutine to its current operating
+// system thread.
 // The calling goroutine will always execute in that thread,
 // and no other goroutine will execute in it,
 // until the calling goroutine has made as many calls to
@@ -79,9 +80,9 @@ Luckily, there is a method called `LockOSThread` offered from the
 // If the calling goroutine exits without unlocking the thread,
 // the thread will be terminated.
 //
-// All init functions are run on the startup thread. Calling LockOSThread
-// from an init function will cause the main function to be invoked on
-// that thread.
+// All init functions are run on the startup thread. Calling
+// LockOSThread from an init function will cause the main function
+// to be invoked on that thread.
 //
 // A goroutine should call LockOSThread before calling OS services or
 // non-Go library functions that depend on per-thread state.
@@ -97,7 +98,8 @@ allows us to identify, at least, the main thread. When we would like to
 wrapping thread scheduling as a package `mainthread`, we can do
 something like the following::
 
-```go {linenos=inline,hl_lines=[13,16],linenostart=1}
+<!-- {linenos=inline,hl_lines=[13,16],linenostart=1} -->
+```go
 package mainthread // import "x/mainthread"
 
 import "runtime"
@@ -118,7 +120,8 @@ func Call(f func())
 
 As a user of such a package, one can:
 
-```go {linenos=inline,hl_lines=[15],linenostart=1}
+<!-- {linenos=inline,hl_lines=[15],linenostart=1} -->
+```go
 package main
 
 func main() {
@@ -131,7 +134,8 @@ func fn() {
 
 
 func gn() {
-	// Wherever gn is running, the call will be executed on the main thread.
+	// Wherever gn is running, the call will be executed on
+	// the main thread.
 	mainthread.Call(func() {
 		// ... do whatever we want to run on the main thread ...
 	})
@@ -262,7 +266,8 @@ func NewWindow() (*Win, error) {
 		err error
 	)
 	mainthread.Call(func() {
-		w.win, err = glfw.CreateWindow(640, 480, "golang.design/research", nil, nil)
+		w.win, err = glfw.CreateWindow(640, 480,
+			"golang.design/research", nil, nil)
 		if err != nil {
 			return
 		}
@@ -437,7 +442,8 @@ The first optimization comes to the attempt to avoid allocating channels.
 In our `Call` implementation, we allocate a signal channel for
 every function that we need to call from the main thread:
 
-```go {linenos=inline,hl_lines=[3],linenostart=1}
+<!-- {linenos=inline,hl_lines=[3],linenostart=1} -->
+```go
 // Call calls f on the main thread and blocks until f finishes.
 func Call(f func()) {
 	done := make(chan struct{}) // allocation!
@@ -475,13 +481,15 @@ type hchan struct {
 A well-known trick to avoid repetitive allocation is to use
 the `sync.Pool`. One can:
 
-```go {linenos=inline,hl_lines=["1-3", 6, 7],linenostart=1}
+<!-- {linenos=inline,hl_lines=["1-3", 6, 7],linenostart=1} -->
+```go
 var donePool = sync.Pool{New: func() interface{} {
 	return make(chan struct{})
 }}
 
 func Call(f func()) {
-	done := donePool.Get().(chan struct{}) // reuse signal channel via sync.Pool!
+	// reuse signal channel via sync.Pool!
+	done := donePool.Get().(chan struct{})
 	defer donePool.Put(done)
 
 	funcQ <- func() {
@@ -495,7 +503,8 @@ func Call(f func()) {
 With that simple optimization, a benchmarked result indicates
 an 80% reduction of memory usage:
 
-```txt {linenos=inline,hl_lines=[3,7,11],linenostart=1}
+<!-- {linenos=inline,hl_lines=[3,7,11],linenostart=1} -->
+```txt
 name              old time/op    new time/op      delta
 DirectCall-8      0.95ns ±1%         0.95ns ±1%    ~     (p=0.631 n=10+10)
 MainThreadCall-8   448ns ±0%         440ns ±0%   -1.83%  (p=0.000 n=9+9)
@@ -546,7 +555,8 @@ cause an escape by design.
 To avoid the escaping function literal, instead of using
 a function wrapper, we can send a struct:
 
-```go {linenos=inline,hl_lines=["1-4", 10],linenostart=1}
+<!-- {linenos=inline,hl_lines=["1-4", 10],linenostart=1} -->
+```go
 type funcdata struct {
 	fn   func()
 	done chan struct{}
@@ -563,7 +573,8 @@ func Call(f func()) {
 
 and when we receive the `funcdata`:
 
-```go {linenos=inline,hl_lines=["6-8"],linenostart=1}
+<!-- {linenos=inline,hl_lines=["6-8"],linenostart=1} -->
+```go
 func Init(main func()) {
 	...
 
@@ -582,7 +593,8 @@ func Init(main func()) {
 After such an optimization, a re-benchmarked result indicates that
 we hint the zero-allocation goal:
 
-```txt {linenos=table,hl_lines=[3,7,11],linenostart=1}
+<!-- {linenos=table,hl_lines=[3,7,11],linenostart=1} -->
+```txt
 name              old time/op     new time/op     delta
 DirectCall-8      0.95ns ±1%      0.95ns ±1%        ~      (p=0.896 n=10+10)
 MainThreadCall-8   448ns ±0%       366ns ±1%     -18.17%   (p=0.000 n=9+9)
@@ -623,7 +635,8 @@ operation to a runtime function `runtime.newobject`. One can add 3
 more lines and prints, which is exactly calling this function
 using `runtime.FuncForPC`:
 
-```go {linenos=inline,hl_lines=["3-5"],linenostart=1}
+<!-- {linenos=inline,hl_lines=["3-5"],linenostart=1} -->
+```go
 // src/runtime/malloc.go
 func newobject(typ *_type) unsafe.Pointer {
 	f := FuncForPC(getcallerpc())       // add this
@@ -646,7 +659,8 @@ similar to below:
 
 It demonstrates how and why the allocation still happens:
 
-```go {linenos=inline,hl_lines=[23],linenostart=1}
+<!-- {linenos=inline,hl_lines=[23],linenostart=1} -->
+```go
 // ch <- elem
 func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr) bool {
 	...
