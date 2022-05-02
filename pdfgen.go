@@ -16,8 +16,7 @@ import (
 	"time"
 
 	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark-meta"
-	"github.com/yuin/goldmark/extension"
+	meta "github.com/yuin/goldmark-meta"
 	"github.com/yuin/goldmark/parser"
 	"gopkg.in/yaml.v3"
 	"mvdan.cc/xurls/v2"
@@ -29,10 +28,6 @@ func init() {
 	md = goldmark.New(
 		goldmark.WithExtensions(
 			meta.Meta,
-			extension.Table,
-		),
-		goldmark.WithParserOptions(
-			parser.WithAutoHeadingID(),
 		),
 	)
 }
@@ -249,7 +244,7 @@ func parseReferences(b []byte) string {
 
 		## References
 
-		[@ou2022bench]: Changkun Ou. 2020. Conduct Reliable Benchmarking in Go. TalkGo Meetup. Virtual Event. March 26. https://golang.design/s/gobench
+		[^ou2022bench]: Changkun Ou. 2020. Conduct Reliable Benchmarking in Go. TalkGo Meetup. Virtual Event. March 26. https://golang.design/s/gobench
 		`)
 
 	}
