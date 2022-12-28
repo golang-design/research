@@ -1,0 +1,46 @@
+goos: linux
+goarch: amd64
+pkg: go20/unsafeconv
+cpu: Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz
+BenchmarkSliceToString/type-cast-8         	64924000	        17.87 ns/op
+BenchmarkSliceToString/type-cast-8         	64388473	        17.79 ns/op
+BenchmarkSliceToString/type-cast-8         	65134988	        17.73 ns/op
+BenchmarkSliceToString/type-cast-8         	65208378	        17.68 ns/op
+BenchmarkSliceToString/type-cast-8         	64579916	        17.81 ns/op
+BenchmarkSliceToString/type-cast-8         	64543296	        18.07 ns/op
+BenchmarkSliceToString/type-cast-8         	62716504	        17.96 ns/op
+BenchmarkSliceToString/type-cast-8         	63951648	        18.22 ns/op
+BenchmarkSliceToString/type-cast-8         	64475872	        18.04 ns/op
+BenchmarkSliceToString/type-cast-8         	64705123	        18.79 ns/op
+BenchmarkSliceToString/unsafe-conv-8       	1000000000	         0.3972 ns/op
+BenchmarkSliceToString/unsafe-conv-8       	1000000000	         0.3971 ns/op
+BenchmarkSliceToString/unsafe-conv-8       	1000000000	         0.3971 ns/op
+BenchmarkSliceToString/unsafe-conv-8       	1000000000	         0.4027 ns/op
+BenchmarkSliceToString/unsafe-conv-8       	1000000000	         0.3983 ns/op
+BenchmarkSliceToString/unsafe-conv-8       	1000000000	         0.3972 ns/op
+BenchmarkSliceToString/unsafe-conv-8       	1000000000	         0.4038 ns/op
+BenchmarkSliceToString/unsafe-conv-8       	1000000000	         0.3972 ns/op
+BenchmarkSliceToString/unsafe-conv-8       	1000000000	         0.3973 ns/op
+BenchmarkSliceToString/unsafe-conv-8       	1000000000	         0.3973 ns/op
+BenchmarkStringToSlice/type-cast-8         	59652710	        19.57 ns/op
+BenchmarkStringToSlice/type-cast-8         	59918130	        19.64 ns/op
+BenchmarkStringToSlice/type-cast-8         	58653292	        19.43 ns/op
+BenchmarkStringToSlice/type-cast-8         	59273530	        19.47 ns/op
+BenchmarkStringToSlice/type-cast-8         	58420108	        19.60 ns/op
+BenchmarkStringToSlice/type-cast-8         	59721331	        19.41 ns/op
+BenchmarkStringToSlice/type-cast-8         	59636106	        19.28 ns/op
+BenchmarkStringToSlice/type-cast-8         	59624952	        19.34 ns/op
+BenchmarkStringToSlice/type-cast-8         	59886362	        19.23 ns/op
+BenchmarkStringToSlice/type-cast-8         	59937526	        19.41 ns/op
+BenchmarkStringToSlice/unsafe-conv-8       	1000000000	         0.3970 ns/op
+BenchmarkStringToSlice/unsafe-conv-8       	1000000000	         0.3974 ns/op
+BenchmarkStringToSlice/unsafe-conv-8       	1000000000	         0.3970 ns/op
+BenchmarkStringToSlice/unsafe-conv-8       	1000000000	         0.3970 ns/op
+BenchmarkStringToSlice/unsafe-conv-8       	1000000000	         0.4016 ns/op
+BenchmarkStringToSlice/unsafe-conv-8       	1000000000	         0.4017 ns/op
+BenchmarkStringToSlice/unsafe-conv-8       	1000000000	         0.3969 ns/op
+BenchmarkStringToSlice/unsafe-conv-8       	1000000000	         0.3969 ns/op
+BenchmarkStringToSlice/unsafe-conv-8       	1000000000	         0.3969 ns/op
+BenchmarkStringToSlice/unsafe-conv-8       	1000000000	         0.3971 ns/op
+PASS
+ok  	go20/unsafeconv	32.369s
