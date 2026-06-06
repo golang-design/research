@@ -635,6 +635,29 @@ behavior of a built-in channel, whose buffered values likewise remain
 available after `close` until they are received. This refinement ships in
 chann v0.2.0, which consequently requires Go 1.24.
 
+### Keeping the backlog allocation-free under load
+
+A subtler cost hides in how the backlog itself is stored. The obvious
+choice is a slice, dequeued with `q = q[1:]` and refilled with `append`.
+That works, but under *sustained* load -- a producer keeping a steady
+queue depth -- the live window slides rightward through the backing array,
+so `append` periodically reallocates and copies the entire window. Over
+`M` operations that is `O(M)` garbage even though the queue never grows
+beyond its steady depth, which surfaces as large slice allocations and
+heavy garbage-collector pressure exactly when throughput is highest.
+
+A growable *ring buffer* removes this. Popped slots are reused as the head
+and tail wrap around the backing array; it grows (by doubling) only when
+genuinely full, and shrinks back once drained. The steady state then runs
+allocation-free:
+
+| backlog depth 4096 | slice | ring  |
+|:------------------:|:-----:|:-----:|
+| time / op          | 599ns | 516ns |
+| allocations / op   | 23 B  | 0 B   |
+
+This ships in chann v0.2.1.
+
 One may use these APIs to fit the previous discussed example:
 
 ```diff
