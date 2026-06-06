@@ -507,10 +507,10 @@ misuses:
 // receive (Out()), and close (Close()).
 //
 // Note that to close a channel, must use Close() method instead of the
-// language built-in method
-// Two additional methods: ApproxLen and Cap returns the current status
-// of the channel: an approximation of the current length of the channel,
-// as well as the current capacity of the channel.
+// language built-in method.
+// Two additional methods: Len and Cap returns the current status of the
+// channel: an approximation of the current length of the channel, as
+// well as the current capacity of the channel.
 //
 // See https://golang.design/research/ultimate-channel to understand
 // the motivation of providing this package and the possible use cases
@@ -566,15 +566,74 @@ func (ch *Chann[T]) Out() <-chan T { ... }
 // Close closes the channel gracefully.
 func (ch *Chann[T]) Close() { ... }
 
-// ApproxLen returns an approximation of the length of the channel.
+// Len returns an approximation of the length of the channel.
 //
 // Note that in a concurrent scenario, the returned length of a channel
-// may never be accurate. Hence the function is named with an Approx prefix.
-func (ch *Chann[T]) ApproxLen() int
+// may never be accurate. Hence the result should only be treated as an
+// approximation.
+func (ch *Chann[T]) Len() int
 
-// Cap returns the capacity of the channel.
+// Cap returns the capacity of the channel. For an unbounded channel it
+// returns -1, consistent with how a negative Cap option creates one.
 func (ch *Chann[T]) Cap() int
 ```
+
+### Terminating without losing data or leaking goroutines
+
+The first two requirements above are, in fact, in tension. To guarantee
+that no element is lost after `Close`, the processing goroutine must
+deliver the entire backlog with a *blocking* send to the output channel.
+But if nobody is receiving, that blocking send never completes, and the
+goroutine -- together with the entire backlog it still references --
+leaks forever. Conversely, dropping the backlog to force the goroutine to
+return loses data when a receiver is, in fact, draining concurrently. An
+earlier version of the package leaned to one side and silently dropped
+elements on close (golang.design/x/chann#3).
+
+The way out is to notice that the processing goroutine only needs to keep
+running as long as the channel is still reachable by someone who could
+receive from it. Once the `Chann` itself becomes unreachable, nobody can
+ever drain the output channel again, so the goroutine is free to stop.
+Go 1.24's [`runtime.AddCleanup`](https://pkg.go.dev/runtime#AddCleanup)
+(the modern replacement for `runtime.SetFinalizer`) gives us exactly this
+signal:
+
+```go
+released := make(chan struct{})
+runtime.AddCleanup(ch, func(r chan struct{}) { close(r) }, released)
+go process(ch.in, ch.out, ch.close, released, ch.cfg)
+```
+
+There is one crucial subtlety: the processing goroutine must **not** close
+over the `Chann` value. A method value such as `go ch.process()` keeps its
+receiver `ch` reachable for as long as the goroutine runs, so the cleanup
+would never fire and the `released` signal would never arrive. That is why
+`process` is a free function operating only on the extracted channels and
+config, rather than a method on `*Chann`. With that in place, after `Close`
+the backlog is delivered with a blocking send, but the drain loop also
+selects on `released`, so it terminates instead of leaking once the channel
+is garbage collected:
+
+```go
+func deliver[T any](out chan T, q []T, released chan struct{}) {
+	for len(q) > 0 {
+		select {
+		case out <- q[0]: // a receiver is draining; deliver in FIFO order
+			q = q[1:]
+		case <-released: // the Chann is unreachable; stop instead of leaking
+			close(out)
+			return
+		}
+	}
+	close(out)
+}
+```
+
+This delivers every element when there is a receiver, yet never leaks the
+goroutine (nor the memory it pins) when there is not. It mirrors the memory
+behavior of a built-in channel, whose buffered values likewise remain
+available after `close` until they are received. This refinement ships in
+chann v0.2.0, which consequently requires Go 1.24.
 
 One may use these APIs to fit the previous discussed example:
 
@@ -636,7 +695,7 @@ In this article, we talked about a generic implementation of a channel with arbi
 import "golang.design/x/chann"
 ```
 
-We may still ask: Is the implementation perfect? Why there is no `len()` but only a `ApproxLen()`?
+We may still ask: Is the implementation perfect? Why does `Len()` only return an approximation instead of an exact length?
 Well, the answer is non-trivial. The `len()` is not a thread-safe operation
 for arrays, slices, and maps, but it becomes pretty clear that it has to be
 thread safe for channels, otherwise, there is no way to fetch channel length
