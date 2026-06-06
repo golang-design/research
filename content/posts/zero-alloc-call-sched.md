@@ -610,6 +610,26 @@ MainThreadCall-8    2.00 ±0%         0.00       -100.00%   (p=0.000 n=10+10)
 
 Hooray! 🎉
 
+> **Update (2026):** A clarification on the _latency_ numbers above (e.g.
+> `366ns`, `447ns`). These benchmarks call `mainthread.Init` from _inside_ the
+> benchmark function, so under `go test` the event loop runs on the ordinary,
+> unlocked goroutine that `testing` spawned for the benchmark — not on
+> goroutine 1, the thread pinned by `runtime.LockOSThread` in `init`. In other
+> words, they measure the cost of handing a call to the _scheduler goroutine_,
+> not to the actual main thread. Dispatching to the real locked main thread is
+> considerably more expensive and platform dependent: re-measuring the very
+> same `opt2` code with the loop running on goroutine 1 (via a `TestMain` that
+> calls `Init`) yields about `9µs`/op on an Apple M2 — roughly 25× the reported
+> `366ns` — and the figure is noisy, because it is dominated by the OS cost of
+> waking a specific locked thread.
+>
+> This does **not** affect the article's thesis. The allocation results are
+> unchanged: scheduling is **zero-allocation** on either path (`0 B/op`,
+> `0 allocs/op`), and that remains the contribution of this work. What changes
+> is only the interpretation of the _absolute latency_ — the number to keep in
+> mind for real main-thread scheduling is this microsecond-scale wakeup cost,
+> which is inherent to the OS thread and cannot be optimized away in userland.
+
 ## Verification and Discussion
 
 Before we conclude this research, let us do a final verification on
