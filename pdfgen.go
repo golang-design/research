@@ -76,12 +76,16 @@ func main() {
 	abstrat = re.ReplaceAllString(abstrat, "\\cite{$1}") // use citation key
 	metaData["abstract"] = abstrat
 
-	metaData["header-includes"] = `\usepackage{fancyhdr}
-    \pagestyle{fancy}
-	\fancyhead[LE,RO]{\rightmark}
-    \fancyhead[RE,LO]{The golang.design Research}
-    \fancyfoot{}
-	\fancyfoot[C]{\thepage}`
+	// Pass the LaTeX preamble verbatim via --include-in-header below.
+	// Routing it through the "header-includes" metadata makes pandoc
+	// render it as Markdown, which (since pandoc 3.x) injects a stray \\
+	// after \fancyfoot{} and breaks the xelatex run.
+	headerTeX := `\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead[LE,RO]{\rightmark}
+\fancyhead[RE,LO]{The golang.design Research}
+\fancyfoot{}
+\fancyfoot[C]{\thepage}`
 
 	body := parseBody(b)
 	body = re.ReplaceAllString(body, "\\cite{$1}") // use citation key
@@ -112,11 +116,18 @@ func main() {
 	}
 	defer os.Remove(article)
 
+	header := "header.tex"
+	if err := os.WriteFile(header, []byte(headerTeX), os.ModePerm); err != nil {
+		log.Fatalf("pdfgen: cannot create header file: %v", err)
+	}
+	defer os.Remove(header)
+
 	// Generate pdf
 
 	dst := "../" + strings.TrimSuffix(path, ".md") + ".pdf"
 	cmd := exec.Command("pandoc", article, ref,
 		"-V", "linkcolor:blue",
+		"--include-in-header", header,
 		"--pdf-engine=xelatex",
 		"-o", dst)
 	log.Println(cmd.String())
