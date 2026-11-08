@@ -543,7 +543,7 @@ When we allocate 100 handles per second, the handle space can run out in
 0xFFFFFFF / (24 * 60 * 60 * 100) = 31 days).
 
 *_If you are interested and think this is a serious issue, feel free to
-[CC us](mailto:hi[at]golang.design) when you send a CL,
+[let us know](https://github.com/golang-design/research/issues) when you send a CL,
 it would also be interesting for us to read your excellent approach._
 
 ## References
